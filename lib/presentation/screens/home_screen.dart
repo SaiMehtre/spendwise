@@ -1,8 +1,29 @@
 import 'package:flutter/material.dart';
 import 'add_expense_screen.dart';
+import '../../data/services/expense_service.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final service = ExpenseService();
+  List<Map<String, dynamic>> expenses = [];
+
+  @override
+  void initState() {
+    super.initState();
+    loadExpenses();
+  }
+
+  void loadExpenses() {
+    setState(() {
+      expenses = service.getExpenses();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -11,13 +32,16 @@ class HomeScreen extends StatelessWidget {
         title: const Text("Expense Tracker"),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
+        onPressed: () async {
+          await Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => const AddExpenseScreen(),
             ),
           );
+
+          // 🔥 Important: refresh after coming back
+          loadExpenses();
         },
         child: const Icon(Icons.add),
       ),
@@ -25,7 +49,7 @@ class HomeScreen extends StatelessWidget {
         children: [
           const SizedBox(height: 20),
 
-          // Total Card
+          // Total Card (we'll update next)
           Container(
             margin: const EdgeInsets.all(16),
             padding: const EdgeInsets.all(20),
@@ -50,12 +74,22 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
 
-          // Placeholder list
-          const Expanded(
-            child: Center(
-              child: Text("No Expenses Yet"),
-            ),
-          ),
+          Expanded(
+            child: expenses.isEmpty
+                ? const Center(child: Text("No Expenses Yet"))
+                : ListView.builder(
+                    itemCount: expenses.length,
+                    itemBuilder: (context, index) {
+                      final item = expenses[index];
+
+                      return ListTile(
+                        title: Text(item['category']),
+                        subtitle: Text(item['note']),
+                        trailing: Text("₹${item['amount']}"),
+                      );
+                    },
+                  ),
+          )
         ],
       ),
     );

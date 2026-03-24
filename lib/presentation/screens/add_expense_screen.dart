@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../data/services/expense_service.dart';
 
 class AddExpenseScreen extends StatefulWidget {
   const AddExpenseScreen({super.key});
@@ -21,14 +22,28 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     "Others"
   ];
 
-  void saveExpense() {
-    // Abhi print only (Hive baad me)
-    print("Amount: ${_amountController.text}");
-    print("Category: $selectedCategory");
-    print("Note: ${_noteController.text}");
+  // void saveExpense() {
+  //   // Abhi print only (Hive baad me)
+  //   print("Amount: ${_amountController.text}");
+  //   print("Category: $selectedCategory");
+  //   print("Note: ${_noteController.text}");
 
-    Navigator.pop(context);
-  }
+  //   Navigator.pop(context);
+  // }
+
+  void saveExpense() {
+  final service = ExpenseService();
+
+  service.addExpense({
+    // "amount": double.parse(_amountController.text),
+    "amount": double.tryParse(_amountController.text) ?? 0,
+    "category": selectedCategory,
+    "note": _noteController.text,
+    "date": DateTime.now().toString(),
+  });
+
+  Navigator.pop(context);
+}
 
   @override
   Widget build(BuildContext context) {
