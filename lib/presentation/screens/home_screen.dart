@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'add_expense_screen.dart';
 import '../../data/services/expense_service.dart';
+import 'analytics_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -175,7 +176,22 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text("SpendWise"),
         backgroundColor: Colors.transparent,
         elevation: 0,
+
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.bar_chart), // 📊 analytics icon
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => AnalyticsScreen(),
+                ),
+              );
+            },
+          ),
+        ],
       ),
+      
       drawer: Drawer(
         child: ListView(
           children: const [
