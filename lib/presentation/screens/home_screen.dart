@@ -95,15 +95,17 @@ class _HomeScreenState extends State<HomeScreen> {
   // Dashboard Cards
 
   Widget buildDashboardCards() {
+    final width = MediaQuery.of(context).size.width;
+
     return Padding(
       padding: const EdgeInsets.all(12),
       child: GridView.count(
-        crossAxisCount: 2,
+        crossAxisCount: width < 300 ? 1 : 2, // 🔥 ultra small fix
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: 1.4,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+        childAspectRatio: width < 360 ? 1.1 : 1.4, // 🔥 height adjust
         children: [
           buildCard("Today", getTodayExpense()),
           buildCard("Week", getWeeklyExpense()),
@@ -115,32 +117,50 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget buildCard(String title, double amount) {
+    final width = MediaQuery.of(context).size.width;
+
+    final isSmall = width < 360; // 🔥 breakpoint
+
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(isSmall ? 8 : 14), // 🔥 responsive padding
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withOpacity(0.15),
             blurRadius: 10,
-          )
+          ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title,
-              style: const TextStyle(color: Colors.white70, fontSize: 14)),
-          const Spacer(),
           Text(
-            "₹${amount.toStringAsFixed(0)}",
-            style: const TextStyle(
+            title,
+            maxLines: 1, // ✅ overflow fix
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: isSmall ? 11 : 14, // 🔥 responsive font
+            ),
+          ),
+
+          const Spacer(),
+
+          FittedBox( // 🔥 BIGGEST FIX
+            child: Text(
+              "₹${amount.toStringAsFixed(0)}",
+              style: TextStyle(
                 color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold),
+                fontSize: isSmall ? 14 : 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -181,139 +201,66 @@ class _HomeScreenState extends State<HomeScreen> {
         child: const Icon(Icons.add, color: Colors.white),
       ),
       body: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFFEEF2F3), Color(0xFFDDE6ED)],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-            ),
-            child: Column(
-              children: [
-          const SizedBox(height: 20),
+  decoration: const BoxDecoration(
+    gradient: LinearGradient(
+      colors: [Color(0xFFEEF2F3), Color(0xFFDDE6ED)],
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+    ),
+  ),
+  child: SingleChildScrollView(   // ✅ MAIN FIX
+    child: Column(
+      children: [
+        const SizedBox(height: 20),
 
-          // Total Card (we'll update next)
-          Container(
-            margin: const EdgeInsets.all(16),
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Total Spend",
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 16,
-                      ),
+        buildDashboardCards(),
+
+        const SizedBox(height: 10),
+
+        expenses.isEmpty
+            ? const Center(child: Text("No Expenses Yet"))
+            : ListView.builder(
+                shrinkWrap: true,   // ✅ IMPORTANT
+                physics: const NeverScrollableScrollPhysics(), // ✅ IMPORTANT
+                itemCount: expenses.length,
+                itemBuilder: (context, index) {
+                  final item = expenses[index];
+
+                  return Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    SizedBox(height: 8),
-                    Text(
-                      "This Month",
-                      style: TextStyle(
-                        color: Colors.white54,
-                        fontSize: 12,
-                      ),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          backgroundColor: getCategoryColor(item['category']).withOpacity(0.2),
+                          child: Text(item['category'][0]),
+                        ),
+                        const SizedBox(width: 12),
+
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(item['category']),
+                              Text(item['note']),
+                            ],
+                          ),
+                        ),
+
+                        Text("₹${item['amount']}"),
+                      ],
                     ),
-                  ],
-                ),
-                Text(
-                  "₹${getTotalExpense().toStringAsFixed(2)}",
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          Expanded(
-            child: expenses.isEmpty
-                ? const Center(child: Text("No Expenses Yet"))
-                : ListView.builder(
-                    itemCount: expenses.length,
-                    itemBuilder: (context, index) {
-                      final item = expenses[index];
-
-                      return Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            CircleAvatar(
-                              backgroundColor: getCategoryColor(item['category']).withOpacity(0.2),
-                              child: Text(
-                                item['category'][0],
-                                style: TextStyle(
-                                  color: getCategoryColor(item['category']),
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    item['category'],
-                                    style: const TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                  Text(
-                                    item['note'],
-                                    style: const TextStyle(color: Colors.grey),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            Text(
-                              "₹${item['amount']}",
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            )
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-          )
-        ],
-      ),
-      ),
+                  );
+                },
+              ),
+      ],
+    ),
+  ),
+)
     );
   }
 }
