@@ -192,16 +192,16 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       
-      drawer: Drawer(
-        child: ListView(
-          children: const [
-            DrawerHeader(child: Text("Menu")),
-            ListTile(title: Text("Dashboard")),
-            ListTile(title: Text("Analytics")),
-            ListTile(title: Text("Settings")),
-          ],
-        ),
-      ),
+      // drawer: Drawer(
+      //   child: ListView(
+      //     children: const [
+      //       DrawerHeader(child: Text("Menu")),
+      //       ListTile(title: Text("Dashboard")),
+      //       ListTile(title: Text("Analytics")),
+      //       ListTile(title: Text("Settings")),
+      //     ],
+      //   ),
+      // ),
       floatingActionButton: FloatingActionButton(
         tooltip: "Add Expense",
         onPressed: () async {

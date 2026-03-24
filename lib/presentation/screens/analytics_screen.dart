@@ -6,6 +6,13 @@ class AnalyticsScreen extends StatelessWidget {
   AnalyticsScreen({super.key});
 
   final service = ExpenseService();
+  final List<Color> pieColors = [
+    Colors.blue,
+    Colors.red,
+    Colors.green,
+    Colors.orange,
+    Colors.purple,
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -54,14 +61,14 @@ class AnalyticsScreen extends StatelessWidget {
               // 🔥 TOTAL CARD
               buildTopCard(total),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
 
               // 🔥 TOP CATEGORY
               buildTopCategoryCard(topCategory, max),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
               buildPieChart(categoryMap),
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
 
               // 🔥 CATEGORY LIST
               buildCategoryBreakdown(categoryMap),
@@ -177,19 +184,19 @@ class AnalyticsScreen extends StatelessWidget {
   }
 
   List<PieChartSectionData> buildPieSections(Map<String, double> data) {
-    final colors = [
-      Colors.blue,
-      Colors.red,
-      Colors.green,
-      Colors.orange,
-      Colors.purple,
-    ];
+    // final colors = [
+    //   Colors.blue,
+    //   Colors.red,
+    //   Colors.green,
+    //   Colors.orange,
+    //   Colors.purple,
+    // ];
 
     int i = 0;
 
     return data.entries.map((entry) {
       final section = PieChartSectionData(
-        color: colors[i % colors.length],
+        color: pieColors[i % pieColors.length], // 🔥 same source
         value: entry.value,
         title: "", // clean look (labels below)
         radius: 50,
@@ -200,6 +207,7 @@ class AnalyticsScreen extends StatelessWidget {
   }
 
   Widget buildPieChart(Map<String, double> data) {
+    int i = 0;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -229,8 +237,12 @@ class AnalyticsScreen extends StatelessWidget {
           const SizedBox(height: 20),
 
           // 🔥 LEGEND
+
           Column(
             children: data.entries.map((entry) {
+              final color = pieColors[i % pieColors.length]; // 🔥 SAME LOGIC
+              i++;
+
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Row(
@@ -238,7 +250,10 @@ class AnalyticsScreen extends StatelessWidget {
                     Container(
                       width: 12,
                       height: 12,
-                      color: Colors.blue, // simple for now
+                      decoration: BoxDecoration(
+                        color: color,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
