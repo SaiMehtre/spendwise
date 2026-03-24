@@ -50,16 +50,124 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // Today Spend
+  double getTodayExpense() {
+    final now = DateTime.now();
+
+    return expenses.where((e) {
+      final date = DateTime.parse(e['date']);
+      return date.day == now.day &&
+          date.month == now.month &&
+          date.year == now.year;
+    }).fold(0, (sum, e) => sum + e['amount']);
+  }
+
+  // Weekly spend
+  double getWeeklyExpense() {
+    final now = DateTime.now();
+    final weekStart = now.subtract(Duration(days: now.weekday - 1));
+
+    return expenses.where((e) {
+      final date = DateTime.parse(e['date']);
+      return date.isAfter(weekStart);
+    }).fold(0, (sum, e) => sum + e['amount']);
+  }
+  // Monthly Spend
+  double getMonthlyExpense() {
+    final now = DateTime.now();
+
+    return expenses.where((e) {
+      final date = DateTime.parse(e['date']);
+      return date.month == now.month && date.year == now.year;
+    }).fold(0, (sum, e) => sum + e['amount']);
+  }
+
+  // Yearly Spend
+  double getYearlyExpense() {
+    final now = DateTime.now();
+
+    return expenses.where((e) {
+      final date = DateTime.parse(e['date']);
+      return date.year == now.year;
+    }).fold(0, (sum, e) => sum + e['amount']);
+  }
+
+  // Dashboard Cards
+
+  Widget buildDashboardCards() {
+    return Padding(
+      padding: const EdgeInsets.all(12),
+      child: GridView.count(
+        crossAxisCount: 2,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 1.4,
+        children: [
+          buildCard("Today", getTodayExpense()),
+          buildCard("Week", getWeeklyExpense()),
+          buildCard("Month", getMonthlyExpense()),
+          buildCard("Year", getYearlyExpense()),
+        ],
+      ),
+    );
+  }
+
+  Widget buildCard(String title, double amount) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 10,
+          )
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title,
+              style: const TextStyle(color: Colors.white70, fontSize: 14)),
+          const Spacer(),
+          Text(
+            "₹${amount.toStringAsFixed(0)}",
+            style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       
       appBar: AppBar(
-        title: const Text("Expense Tracker"),
+        title: const Text("SpendWise"),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
+      drawer: Drawer(
+        child: ListView(
+          children: const [
+            DrawerHeader(child: Text("Menu")),
+            ListTile(title: Text("Dashboard")),
+            ListTile(title: Text("Analytics")),
+            ListTile(title: Text("Settings")),
+          ],
+        ),
+      ),
       floatingActionButton: FloatingActionButton(
+        tooltip: "Add Expense",
         onPressed: () async {
           await Navigator.push(
             context,
