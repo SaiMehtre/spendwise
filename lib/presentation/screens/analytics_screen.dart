@@ -56,21 +56,17 @@ class AnalyticsScreen extends StatelessWidget {
           ),
         ),
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(6),
           child: Column(
             children: [
               // 🔥 TOTAL CARD
               buildTopCard(total),
-
-              const SizedBox(height: 10),
-
+              const SizedBox(height: 8),
               // 🔥 TOP CATEGORY
               buildTopCategoryCard(topCategory, max),
-
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               buildPieChart(categoryMap),
-              const SizedBox(height: 10),
-
+              const SizedBox(height: 8),
               // 🔥 CATEGORY LIST
               buildCategoryBreakdown(categoryMap),
             ],
@@ -82,12 +78,12 @@ class AnalyticsScreen extends StatelessWidget {
 
   Widget buildTopCard(double total) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFF11998E), Color(0xFF38EF7D)],
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
         children: [
@@ -97,7 +93,7 @@ class AnalyticsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            "₹${total.toStringAsFixed(0)}",
+            "₹${total.toStringAsFixed(2)}",
             style: const TextStyle(
               color: Colors.white,
               fontSize: 28,
@@ -111,12 +107,12 @@ class AnalyticsScreen extends StatelessWidget {
 
   Widget buildTopCategoryCard(String category, double amount) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFFFF512F), Color(0xFFDD2476)],
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
         children: [
@@ -138,7 +134,7 @@ class AnalyticsScreen extends StatelessWidget {
                   style: const TextStyle(color: Colors.white),
                 ),
                 Text(
-                  "₹${amount.toStringAsFixed(0)}",
+                  "₹${amount.toStringAsFixed(2)}",
                   style: const TextStyle(color: Colors.white),
                 ),
               ],
@@ -153,7 +149,7 @@ class AnalyticsScreen extends StatelessWidget {
     return Column(
       children: data.entries.map((entry) {
         return Container(
-          margin: const EdgeInsets.only(bottom: 10),
+          margin: const EdgeInsets.only(bottom: 8),
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: Colors.white,
@@ -173,7 +169,7 @@ class AnalyticsScreen extends StatelessWidget {
 
               FittedBox( // 🔥 prevents overflow
                 child: Text(
-                  "₹${entry.value.toStringAsFixed(0)}",
+                  "₹${entry.value.toStringAsFixed(2)}",
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
@@ -184,17 +180,7 @@ class AnalyticsScreen extends StatelessWidget {
     );
   }
 
-  List<PieChartSectionData> buildPieSections(Map<String, double> data) {
-    // final colors = [
-    //   Colors.blue,
-    //   Colors.red,
-    //   Colors.green,
-    //   Colors.orange,
-    //   Colors.purple,
-    // ];
-
-    // int i = 0;
-
+  List<PieChartSectionData> buildPieSections(Map<String, double> data) {  
     return data.entries.map((entry) {
       final section = PieChartSectionData(
         color: getCategoryColor(entry.key), // 🔥 FIXED
@@ -202,20 +188,18 @@ class AnalyticsScreen extends StatelessWidget {
         title: "",
         radius: 50,
       );
-      // i++;
       return section;
     }).toList();
-  }
-  
+  }  
 
   Widget buildPieChart(Map<String, double> data) {
     double total = data.values.fold(0, (sum, val) => sum + val);
     // int i = 0;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
         children: [
@@ -266,7 +250,7 @@ class AnalyticsScreen extends StatelessWidget {
                     ),
 
                     Text(
-                      "₹${entry.value.toStringAsFixed(0)}  (${percent.toStringAsFixed(1)}%)",
+                      "₹${entry.value.toStringAsFixed(2)}  (${percent.toStringAsFixed(1)}%)",
                       style: const TextStyle(fontWeight: FontWeight.w500),
                     ),
                   ],

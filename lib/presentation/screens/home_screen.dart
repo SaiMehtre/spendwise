@@ -176,7 +176,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
           FittedBox(
             child: Text(
-              "₹${amount.toStringAsFixed(0)}",
+              "₹${amount.toStringAsFixed(2)}",
               style: TextStyle(
                 color: Colors.white,
                 fontSize: isSmall ? 14 : 20,
@@ -264,7 +264,21 @@ class _HomeScreenState extends State<HomeScreen> {
                       final item = expenses[index];
 
                       return Dismissible(
-                        key: ValueKey(index), // 🔥 use index
+                        key: Key(expenses[index].toString()),
+
+                        onDismissed: (direction) {
+                          final service = ExpenseService();
+
+                          service.deleteExpense(index); // 🔥 delete from Hive
+
+                          setState(() {
+                            expenses.removeAt(index); // 🔥 remove from UI
+                          });
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Expense deleted")),
+                          );
+                        },
 
                         background: Container(
                           color: Colors.red,
@@ -272,6 +286,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           padding: const EdgeInsets.only(left: 20),
                           child: const Icon(Icons.delete, color: Colors.white),
                         ),
+
 
                         secondaryBackground: Container(
                           color: Colors.blue,
@@ -433,7 +448,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
             ),
 
             Text(
-              "₹${item['amount']}",
+              "₹${item['amount'].toStringAsFixed(2)}",
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ],
