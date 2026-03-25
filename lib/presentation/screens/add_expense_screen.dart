@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 import '../../data/services/expense_service.dart';
 
 class AddExpenseScreen extends StatefulWidget {
-  const AddExpenseScreen({super.key});
+  final Map<String, dynamic>? expense;
+  final int? index; // 🔥 ADD THIS
+
+  const AddExpenseScreen({super.key, this.expense, this.index});
 
   @override
   State<AddExpenseScreen> createState() => _AddExpenseScreenState();
 }
+
 
 class _AddExpenseScreenState extends State<AddExpenseScreen> {
   final _amountController = TextEditingController();
@@ -31,19 +35,35 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   //   Navigator.pop(context);
   // }
 
+  @override
+  void initState() {
+    super.initState();
+
+    if (widget.expense != null) {
+      _amountController.text = widget.expense!['amount'].toString(); // 🔥 FIX
+      _noteController.text = widget.expense!['note']; // 🔥 FIX
+      selectedCategory = widget.expense!['category'];
+    }
+  }
+
   void saveExpense() {
-  final service = ExpenseService();
+    final service = ExpenseService();
 
-  service.addExpense({
-    // "amount": double.parse(_amountController.text),
-    "amount": double.tryParse(_amountController.text) ?? 0,
-    "category": selectedCategory,
-    "note": _noteController.text,
-    "date": DateTime.now().toString(),
-  });
+    final data = {
+      "amount": double.tryParse(_amountController.text) ?? 0,
+      "category": selectedCategory,
+      "note": _noteController.text,
+      "date": DateTime.now().toString(),
+    };
 
-  Navigator.pop(context);
-}
+    if (widget.index == null) {
+      service.addExpense(data); // ➕ new
+    } else {
+      service.updateExpense(widget.index!, data); // ✏️ update
+    }
+
+    Navigator.pop(context);
+  }
 
   @override
   Widget build(BuildContext context) {

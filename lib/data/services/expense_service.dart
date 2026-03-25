@@ -7,7 +7,17 @@ class ExpenseService {
     box.add(expense);
   }
 
+  void deleteExpense(int index) {
+    box.deleteAt(index); // 🔥 FIX
+  }
+
+  void updateExpense(int index, Map<String, dynamic> newData) {
+    box.putAt(index, newData); // 🔥 FIX
+  }
+
   List<Map<String, dynamic>> getExpenses() {
-    return box.values.map((e) => Map<String, dynamic>.from(e)).toList();
+    return box.values
+        .map((e) => Map<String, dynamic>.from(e))
+        .toList();
   }
 }

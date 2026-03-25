@@ -277,48 +277,55 @@ class _HomeScreenState extends State<HomeScreen> {
                       physics: const NeverScrollableScrollPhysics(), // ✅ IMPORTANT
                       itemCount: expenses.length,
                       itemBuilder: (context, index) {
-                        final item = expenses[index];
+                      final item = expenses[index];
 
-                        return Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Row(
-                            children: [
-                              CircleAvatar(
-                                backgroundColor: getCategoryColor(item['category']).withOpacity(0.2),
-                                child: Icon(
-                                  getCategoryIcon(item['category']),
-                                  color: getCategoryColor(item['category']),
+                      return Dismissible(
+                        key: ValueKey(index), // 🔥 use index
+
+                        background: Container(
+                          color: Colors.red,
+                          alignment: Alignment.centerLeft,
+                          padding: const EdgeInsets.only(left: 20),
+                          child: const Icon(Icons.delete, color: Colors.white),
+                        ),
+
+                        secondaryBackground: Container(
+                          color: Colors.blue,
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.only(right: 20),
+                          child: const Icon(Icons.edit, color: Colors.white),
+                        ),
+
+                        confirmDismiss: (direction) async {
+                          if (direction == DismissDirection.startToEnd) {
+                            // 🗑 DELETE
+                            service.deleteExpense(index); // 🔥 FIX
+                            loadExpenses();
+                            return true;
+                          } else {
+                            // ✏️ EDIT
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => AddExpenseScreen(
+                                  expense: item,
+                                  index: index, // 🔥 PASS INDEX
                                 ),
                               ),
-                              const SizedBox(width: 12),
+                            );
+                            loadExpenses();
+                            return false;
+                          }
+                        },
 
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(item['category']),
-                                    Text(item['note']),
-                                    Text(
-                                      formatDate(item['date']), // 🔥 NEW
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-
-                              Text("₹${item['amount']}"),
-                            ],
-                          ),
-                        );
-                      },
+                        child: ExpenseCard(
+                          key: ValueKey(index),
+                          item: item,
+                          color: getCategoryColor(item['category']),
+                          formatDate: formatDate,
+                        ),
+                      );
+                    }
                     ),
             ],
           ),
