@@ -3,6 +3,7 @@ import 'add_expense_screen.dart';
 import '../../data/services/expense_service.dart';
 import 'analytics_screen.dart';
 import 'package:intl/intl.dart';
+import '../../core/utils/category_utils.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -37,20 +38,20 @@ class _HomeScreenState extends State<HomeScreen> {
     return total;
   }
 
-  Color getCategoryColor(String category) {
-    switch (category) {
-      case "Food":
-        return Colors.orange;
-      case "Travel":
-        return Colors.blue;
-      case "Shopping":
-        return Colors.purple;
-      case "Bills":
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
-  }
+  // Color getCategoryColor(String category) {
+  //   switch (category) {
+  //     case "Food":
+  //       return Colors.orange;
+  //     case "Travel":
+  //       return Colors.blue;
+  //     case "Shopping":
+  //       return Colors.purple;
+  //     case "Bills":
+  //       return Colors.red;
+  //     default:
+  //       return Colors.grey;
+  //   }
+  // }
 
   // Today Spend
   double getTodayExpense() {
@@ -365,7 +366,9 @@ class _ExpenseCardState extends State<ExpenseCard> {
           isExpanded = !isExpanded; // 🔥 toggle
         });
       },
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
@@ -377,7 +380,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
             CircleAvatar(
               backgroundColor: widget.color.withOpacity(0.2),
               child: Icon(
-                getCategoryIcon(item['category']), // ✅ correct
+                getCategoryIcon(item['category']),
                 color: widget.color,
               ),
             ),
@@ -390,18 +393,33 @@ class _ExpenseCardState extends State<ExpenseCard> {
                 children: [
                   Text(item['category']),
 
-                  // 🔥 NOTE TEXT
-                  Text(
-                    item['note'],
-                    maxLines: isExpanded ? null : 1,
-                    overflow: isExpanded
-                        ? TextOverflow.visible
-                        : TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: Colors.black54, // 🔥 grayish
+                  // 🔥 ANIMATED NOTE
+                  AnimatedCrossFade(
+                    duration: const Duration(milliseconds: 250),
+                    crossFadeState: isExpanded
+                        ? CrossFadeState.showSecond
+                        : CrossFadeState.showFirst,
+
+                    firstChild: Text(
+                      item['note'],
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.black54,
+                      ),
+                    ),
+
+                    secondChild: Text(
+                      item['note'],
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.black54,
+                      ),
                     ),
                   ),
+
+                  const SizedBox(height: 4),
 
                   Text(
                     widget.formatDate(item['date']),
@@ -420,7 +438,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
             ),
           ],
         ),
-      ),
+      )
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../data/services/expense_service.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../../core/utils/category_utils.dart';
 
 class AnalyticsScreen extends StatelessWidget {
   AnalyticsScreen({super.key});
@@ -192,22 +193,24 @@ class AnalyticsScreen extends StatelessWidget {
     //   Colors.purple,
     // ];
 
-    int i = 0;
+    // int i = 0;
 
     return data.entries.map((entry) {
       final section = PieChartSectionData(
-        color: pieColors[i % pieColors.length], // 🔥 same source
+        color: getCategoryColor(entry.key), // 🔥 FIXED
         value: entry.value,
-        title: "", // clean look (labels below)
+        title: "",
         radius: 50,
       );
-      i++;
+      // i++;
       return section;
     }).toList();
   }
+  
 
   Widget buildPieChart(Map<String, double> data) {
-    int i = 0;
+    double total = data.values.fold(0, (sum, val) => sum + val);
+    // int i = 0;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -240,8 +243,9 @@ class AnalyticsScreen extends StatelessWidget {
 
           Column(
             children: data.entries.map((entry) {
-              final color = pieColors[i % pieColors.length]; // 🔥 SAME LOGIC
-              i++;
+              final percent = (entry.value / total) * 100;
+
+              final color = getCategoryColor(entry.key); // 🔥 SAME COLOR
 
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),
@@ -250,19 +254,21 @@ class AnalyticsScreen extends StatelessWidget {
                     Container(
                       width: 12,
                       height: 12,
-                      decoration: BoxDecoration(
-                        color: color,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
+                      color: color, // 🔥 FIXED
                     ),
                     const SizedBox(width: 8),
+
                     Expanded(
                       child: Text(
                         entry.key,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    Text("₹${entry.value.toStringAsFixed(0)}"),
+
+                    Text(
+                      "₹${entry.value.toStringAsFixed(0)}  (${percent.toStringAsFixed(1)}%)",
+                      style: const TextStyle(fontWeight: FontWeight.w500),
+                    ),
                   ],
                 ),
               );
