@@ -15,6 +15,12 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final service = ExpenseService();
   List<Map<String, dynamic>> expenses = [];
+  int selectedIndex = 0;
+
+  // final List<Widget> screens = [
+  //   const HomeContent(),     // 👈 dashboard + list wala UI
+  //   AnalyticsScreen(),       // 👈 tera existing screen
+  // ];
 
   @override
   void initState() {
@@ -114,27 +120,72 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Dashboard Cards
 
-  Widget buildDashboardCards() {
-    final width = MediaQuery.of(context).size.width;
+  // Widget buildDashboardCards() {
+  //   final width = MediaQuery.of(context).size.width;
 
-    return Padding(
-      padding: const EdgeInsets.all(12),
-      child: GridView.count(
-        crossAxisCount: width < 300 ? 1 : 2, // 🔥 ultra small fix
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        childAspectRatio: width < 360 ? 1.1 : 1.4, // 🔥 height adjust
-        children: [
-          buildCard("Today", getTodayExpense(), Colors.blue),
-          buildCard("Week", getWeeklyExpense(), Colors.green),
-          buildCard("Month", getMonthlyExpense(), Colors.orange),
-          buildCard("Year", getYearlyExpense(), Colors.purple),
-        ],
-      ),
-    );
-  }
+  //   return Padding(
+  //     padding: const EdgeInsets.all(12),
+  //     child: GridView.count(
+  //       crossAxisCount: width < 300 ? 1 : 2, // 🔥 ultra small fix
+  //       shrinkWrap: true,
+  //       physics: const NeverScrollableScrollPhysics(),
+  //       crossAxisSpacing: 8,
+  //       mainAxisSpacing: 8,
+  //       childAspectRatio: width < 360 ? 1.4 : 1.8, // 🔥 height adjust
+  //       children: [
+  //         buildCard("Today", getTodayExpense(), Colors.blue),
+  //         buildCard("Week", getWeeklyExpense(), Colors.green),
+  //         buildCard("Month", getMonthlyExpense(), Colors.orange),
+  //         buildCard("Year", getYearlyExpense(), Colors.purple),
+  //       ],
+  //     ),
+  //   );
+  // }
+
+  Widget buildDashboardCards() {
+  return Padding(
+    padding: const EdgeInsets.all(12),
+    child: Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: AspectRatio(
+                aspectRatio: 1.6,
+                child: buildCard("Today", getTodayExpense(), Colors.blue),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: AspectRatio(
+                aspectRatio: 1.6,
+                child: buildCard("Week", getWeeklyExpense(), Colors.green),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: AspectRatio(
+                aspectRatio: 1.6,
+                child: buildCard("Month", getMonthlyExpense(), Colors.orange),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: AspectRatio(
+                aspectRatio: 1.6,
+                child: buildCard("Year", getYearlyExpense(), Colors.purple),
+              ),
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+}
 
   Widget buildCard(String title, double amount, Color baseColor) {
     final width = MediaQuery.of(context).size.width;
@@ -160,29 +211,37 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center, // ✅ vertical center
+        crossAxisAlignment: CrossAxisAlignment.center, // ✅ horizontal center
         children: [
           Text(
             title,
+            textAlign: TextAlign.center, // optional
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              color: Colors.white70,
-              fontSize: isSmall ? 11 : 14,
+              color: Colors.white,
+              fontSize: isSmall ? 14 : 18,
+              fontWeight: FontWeight.bold,
             ),
           ),
 
-          const Spacer(),
+          const SizedBox(height: 18), // thoda spacing
 
-          FittedBox(
-            child: Text(
-              "₹${amount.toStringAsFixed(2)}",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: isSmall ? 14 : 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0, end: amount),
+            duration: const Duration(milliseconds: 800),
+            curve: Curves.easeOutCubic,
+            builder: (context, value, child) {
+              return Text(
+                "₹${value.toStringAsFixed(2)}",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: isSmall ? 14 : 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -191,26 +250,39 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    List<Widget> screens = [
+      HomeContent(
+        expenses: expenses,
+        service: service,
+        loadExpenses: loadExpenses,
+        buildDashboardCards: buildDashboardCards,
+        formatDate: formatDate,
+      ),
+      AnalyticsScreen(),
+    ];
     return Scaffold(
+      extendBody: true,
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       
       appBar: AppBar(
-        title: const Text("SpendWise"),
+        // title: const Text("SpendWise"),
+        title: Text(
+          selectedIndex == 0 ? "SpendWise" : "Analytics",
+        ),
+        centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
 
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.bar_chart), // 📊 analytics icon
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => AnalyticsScreen(),
-                ),
-              );
-            },
-          ),
-        ],
+        // actions: [
+        //   IconButton(
+        //     icon: const Icon(Icons.bar_chart), // 📊 analytics icon
+        //     onPressed: () {
+        //       setState(() {
+        //         selectedIndex = 1;
+        //       });
+        //     },
+        //   ),
+        // ],
       ),
       
       // drawer: Drawer(
@@ -228,40 +300,114 @@ class _HomeScreenState extends State<HomeScreen> {
         onPressed: () async {
           await Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) => const AddExpenseScreen(),
+            PageRouteBuilder(
+              pageBuilder: (_, __, ___) => const AddExpenseScreen(),
+              transitionsBuilder: (_, animation, __, child) {
+                return ScaleTransition(
+                  scale: animation,
+                  child: child,
+                );
+              },
             ),
           );
-          loadExpenses();
+          loadExpenses(); // 👈 refresh after adding
         },
         backgroundColor: const Color(0xFF6A11CB),
         child: const Icon(Icons.add, color: Colors.white),
       ),
-      body: Container(
+      
+      body: IndexedStack(
+        index: selectedIndex,
+        children: screens,
+      ),
+
+      bottomNavigationBar: BottomAppBar(
+        // color: Colors.white70,
+        // elevation: 10,
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 8,
+        child: SizedBox(
+          height: 60,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              IconButton(
+                icon: Icon(
+                  Icons.home,
+                  color: selectedIndex == 0 ? Colors.deepPurple : Colors.grey,
+                ),
+                onPressed: () {
+                  setState(() {
+                    selectedIndex = 0;
+                  });
+                },
+              ),
+
+              const SizedBox(width: 40), // space for FAB
+              // analytics page open 
+              IconButton(
+                icon: Icon(
+                  Icons.bar_chart,
+                  color: selectedIndex == 1 ? Colors.deepPurple : Colors.grey,
+                ),
+                onPressed: () {
+                  setState(() {
+                    selectedIndex = 1; 
+                  });
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+class HomeContent extends StatelessWidget {
+  final List<Map<String, dynamic>> expenses;
+  final ExpenseService service;
+  final VoidCallback loadExpenses;
+  final Function() buildDashboardCards;
+  final String Function(String) formatDate;
+
+  const HomeContent({
+    super.key,
+    required this.expenses,
+    required this.service,
+    required this.loadExpenses,
+    required this.buildDashboardCards,
+    required this.formatDate,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [Color(0xFFEEF2F3), Color(0xFFDDE6ED)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
-        ),
-        child: SingleChildScrollView(   // ✅ MAIN FIX
+        ),  // ✅ MAIN FIX
           child: Column(
             children: [
-              const SizedBox(height: 20),
+              const SizedBox(height: 8),
 
               buildDashboardCards(),
 
-              const SizedBox(height: 10),
+              const SizedBox(height: 6),
 
-              expenses.isEmpty
-                  ? const Center(child: Text("No Expenses Yet"))
-                  : ListView.builder(
-                      shrinkWrap: true,   // ✅ IMPORTANT
-                      physics: const NeverScrollableScrollPhysics(), // ✅ IMPORTANT
-                      itemCount: expenses.length,
-                      itemBuilder: (context, index) {
-                      final item = expenses[index];
+               // 🔥 IMPORTANT PART
+              Expanded(
+                child: expenses.isEmpty
+                    ? const Center(child: Text("No Expenses Yet"))
+                    : ListView.builder(
+                        itemCount: expenses.length,
+                        padding: const EdgeInsets.only(bottom: 80), // small safe space
+                        itemBuilder: (context, index) {
+                          final item = expenses[index];
 
                       return Dismissible(
                         // key: UniqueKey(),
@@ -315,9 +461,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                           service.deleteExpense(index);
 
-                          setState(() {
-                            expenses.remove(deletedItem);
-                          });
+                          loadExpenses(); // 👈 parent refresh karega
 
                           final messenger = ScaffoldMessenger.of(context);
 
@@ -338,9 +482,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               onPressed: () {
                                 service.addExpense(deletedItem);
 
-                                setState(() {
-                                  expenses.insert(index, deletedItem);
-                                });
+                                loadExpenses();
 
                                 messenger.hideCurrentSnackBar(); // 👈 close on click
                               },
@@ -351,9 +493,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                           // 🔥 FORCE AUTO DISMISS AFTER 3 SEC
                           Future.delayed(const Duration(seconds: 3), () {
-                            if (mounted) {
-                              messenger.hideCurrentSnackBar();
-                            }
+                            messenger.hideCurrentSnackBar();
                           });
                         },
 
@@ -401,11 +541,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       );
                     }
                     ),
+              ),
             ],
           ),
-        ),
-      )
-    );
+        
+    ); // 👈 pura jo body me tha
   }
 }
 

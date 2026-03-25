@@ -46,7 +46,7 @@ class AnalyticsScreen extends StatelessWidget {
     });
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Analytics")),
+      // appBar: AppBar(title: const Text("Analytics")),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -56,7 +56,16 @@ class AnalyticsScreen extends StatelessWidget {
           ),
         ),
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(6),
+          padding: const EdgeInsets.fromLTRB(6, 6, 6, 90), // 👈 MAIN FIX
+
+          // for extra safe
+
+          // padding: EdgeInsets.fromLTRB(
+          //   6,
+          //   6,
+          //   6,
+          //   MediaQuery.of(context).padding.bottom + 80,
+          // ), // 👈 MAIN FIX
           child: Column(
             children: [
               // 🔥 TOTAL CARD
@@ -180,17 +189,27 @@ class AnalyticsScreen extends StatelessWidget {
     );
   }
 
-  List<PieChartSectionData> buildPieSections(Map<String, double> data) {  
-    return data.entries.map((entry) {
-      final section = PieChartSectionData(
-        color: getCategoryColor(entry.key), // 🔥 FIXED
-        value: entry.value,
-        title: "",
-        radius: 50,
-      );
-      return section;
-    }).toList();
-  }  
+List<PieChartSectionData> buildPieSections(Map<String, double> data) {
+  double total = data.values.fold(0, (sum, val) => sum + val);
+  if (total == 0) return [];
+
+  return data.entries.map((entry) {
+    final percent = (entry.value / total) * 100;
+
+    return PieChartSectionData(
+      color: getCategoryColor(entry.key),
+      value: entry.value,
+      title: "${percent.toStringAsFixed(1)}%", // 🔥 MAIN CHANGE
+      radius: 60, // thoda bada for better UI
+
+      titleStyle: const TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.bold,
+        color: Colors.white,
+      ),
+    );
+  }).toList();
+}
 
   Widget buildPieChart(Map<String, double> data) {
     double total = data.values.fold(0, (sum, val) => sum + val);
