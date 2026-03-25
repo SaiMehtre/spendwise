@@ -264,7 +264,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       final item = expenses[index];
 
                       return Dismissible(
-                        key: ValueKey(index),
+                        // key: UniqueKey(),
+                        key: ValueKey(item['date']), // ✅
                         direction: DismissDirection.horizontal,
                         dismissThresholds: const {
                           DismissDirection.startToEnd: 0.4,
@@ -310,29 +311,50 @@ class _HomeScreenState extends State<HomeScreen> {
 
                         // 🔥 ACTUAL DELETE HERE ONLY
                         onDismissed: (direction) {
-                          final deletedItem = expenses[index];
+                          final deletedItem = item;
 
                           service.deleteExpense(index);
 
                           setState(() {
-                            expenses.removeAt(index);
+                            expenses.remove(deletedItem);
                           });
 
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: const Text("Expense deleted"),
-                              action: SnackBarAction(
-                                label: "UNDO",
-                                onPressed: () {
-                                  service.addExpense(deletedItem); // 🔥 restore
+                          final messenger = ScaffoldMessenger.of(context);
 
-                                  setState(() {
-                                    expenses.insert(index, deletedItem);
-                                  });
-                                },
-                              ),
+                          messenger.clearSnackBars();
+
+                          final snackBar = SnackBar(
+                            duration: const Duration(seconds: 3),
+                            backgroundColor: Colors.orange,
+                            behavior: SnackBarBehavior.floating,
+                            margin: EdgeInsets.all(12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            content: const Text("Expense deleted",style: TextStyle(color: Colors.white)),
+                            action: SnackBarAction(
+                              label: "UNDO",
+                              textColor: Colors.white,
+                              onPressed: () {
+                                service.addExpense(deletedItem);
+
+                                setState(() {
+                                  expenses.insert(index, deletedItem);
+                                });
+
+                                messenger.hideCurrentSnackBar(); // 👈 close on click
+                              },
                             ),
                           );
+
+                          messenger.showSnackBar(snackBar);
+
+                          // 🔥 FORCE AUTO DISMISS AFTER 3 SEC
+                          Future.delayed(const Duration(seconds: 3), () {
+                            if (mounted) {
+                              messenger.hideCurrentSnackBar();
+                            }
+                          });
                         },
 
                         // 🟥 LEFT → DELETE
