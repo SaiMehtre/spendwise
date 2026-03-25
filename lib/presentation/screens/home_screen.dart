@@ -264,58 +264,111 @@ class _HomeScreenState extends State<HomeScreen> {
                       final item = expenses[index];
 
                       return Dismissible(
-                        key: Key(expenses[index].toString()),
-
-                        onDismissed: (direction) {
-                          final service = ExpenseService();
-
-                          service.deleteExpense(index); // 🔥 delete from Hive
-
-                          setState(() {
-                            expenses.removeAt(index); // 🔥 remove from UI
-                          });
-
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Expense deleted")),
-                          );
+                        key: ValueKey(index),
+                        direction: DismissDirection.horizontal,
+                        dismissThresholds: const {
+                          DismissDirection.startToEnd: 0.4,
+                          DismissDirection.endToStart: 0.4,
                         },
 
-                        background: Container(
-                          color: Colors.red,
-                          alignment: Alignment.centerLeft,
-                          padding: const EdgeInsets.only(left: 20),
-                          child: const Icon(Icons.delete, color: Colors.white),
-                        ),
-
-
-                        secondaryBackground: Container(
-                          color: Colors.blue,
-                          alignment: Alignment.centerRight,
-                          padding: const EdgeInsets.only(right: 20),
-                          child: const Icon(Icons.edit, color: Colors.white),
-                        ),
-
+                        // 🔥 CONFIRM FIRST
                         confirmDismiss: (direction) async {
                           if (direction == DismissDirection.startToEnd) {
-                            // 🗑 DELETE
-                            service.deleteExpense(index); // 🔥 FIX
-                            loadExpenses();
-                            return true;
+                            // 🗑 DELETE CONFIRM
+                            return await showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text("Delete?"),
+                                content: const Text("Are you sure you want to delete this expense?"),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context, false),
+                                    child: const Text("Cancel"),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context, true),
+                                    child: const Text("Delete"),
+                                  ),
+                                ],
+                              ),
+                            );
                           } else {
-                            // ✏️ EDIT
+                            // ✏️ EDIT (NO DISMISS)
                             await Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (_) => AddExpenseScreen(
                                   expense: item,
-                                  index: index, // 🔥 PASS INDEX
+                                  index: index,
                                 ),
                               ),
                             );
                             loadExpenses();
-                            return false;
+                            return false; // ❌ don't dismiss
                           }
                         },
+
+                        // 🔥 ACTUAL DELETE HERE ONLY
+                        onDismissed: (direction) {
+                          final deletedItem = expenses[index];
+
+                          service.deleteExpense(index);
+
+                          setState(() {
+                            expenses.removeAt(index);
+                          });
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: const Text("Expense deleted"),
+                              action: SnackBarAction(
+                                label: "UNDO",
+                                onPressed: () {
+                                  service.addExpense(deletedItem); // 🔥 restore
+
+                                  setState(() {
+                                    expenses.insert(index, deletedItem);
+                                  });
+                                },
+                              ),
+                            ),
+                          );
+                        },
+
+                        // 🟥 LEFT → DELETE
+                        background: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          alignment: Alignment.centerLeft,
+                          padding: const EdgeInsets.only(left: 20),
+                          child: Row(
+                            children: const [
+                              Icon(Icons.delete, color: Colors.white),
+                              SizedBox(width: 8),
+                              Text("Delete", style: TextStyle(color: Colors.white)),
+                            ],
+                          ),
+                        ),
+
+                        // 🟦 RIGHT → EDIT
+                        secondaryBackground: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.blue,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.only(right: 20),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: const [
+                              Text("Edit", style: TextStyle(color: Colors.white)),
+                              SizedBox(width: 8),
+                              Icon(Icons.edit, color: Colors.white),
+                            ],
+                          ),
+                        ),
 
                         child: ExpenseCard(
                           key: ValueKey(index),
