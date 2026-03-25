@@ -101,23 +101,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return DateFormat('dd MMM, hh:mm a').format(date);
   }
 
-  // Category icons 
-
-  IconData getCategoryIcon(String category) {
-    switch (category) {
-      case "Food":
-        return Icons.restaurant;
-      case "Travel":
-        return Icons.directions_car;
-      case "Shopping":
-        return Icons.shopping_bag;
-      case "Bills":
-        return Icons.receipt;
-      default:
-        return Icons.category;
-    }
-  }
-
   // To EXpand Note Card
 
   Widget buildExpenseCard(Map<String, dynamic> item) {
@@ -335,6 +318,24 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
+
+  // Category icons 
+
+  IconData getCategoryIcon(String category) {
+    switch (category) {
+      case "Food":
+        return Icons.restaurant;
+      case "Travel":
+        return Icons.directions_car;
+      case "Shopping":
+        return Icons.shopping_bag;
+      case "Bills":
+        return Icons.receipt;
+      default:
+        return Icons.category;
+    }
+  }
+
 class ExpenseCard extends StatefulWidget {
   final Map<String, dynamic> item;
   final Color color;
@@ -376,7 +377,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
             CircleAvatar(
               backgroundColor: widget.color.withOpacity(0.2),
               child: Icon(
-                Icons.category,
+                getCategoryIcon(item['category']), // ✅ correct
                 color: widget.color,
               ),
             ),
