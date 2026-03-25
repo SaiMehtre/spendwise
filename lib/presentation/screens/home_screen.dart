@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'add_expense_screen.dart';
 import '../../data/services/expense_service.dart';
 import 'analytics_screen.dart';
+import 'package:intl/intl.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -93,6 +94,40 @@ class _HomeScreenState extends State<HomeScreen> {
     }).fold(0, (sum, e) => sum + e['amount']);
   }
 
+  // Date format 
+
+  String formatDate(String dateStr) {
+    final date = DateTime.parse(dateStr);
+    return DateFormat('dd MMM, hh:mm a').format(date);
+  }
+
+  // Category icons 
+
+  IconData getCategoryIcon(String category) {
+    switch (category) {
+      case "Food":
+        return Icons.restaurant;
+      case "Travel":
+        return Icons.directions_car;
+      case "Shopping":
+        return Icons.shopping_bag;
+      case "Bills":
+        return Icons.receipt;
+      default:
+        return Icons.category;
+    }
+  }
+
+  // To EXpand Note Card
+
+  Widget buildExpenseCard(Map<String, dynamic> item) {
+    return ExpenseCard(
+      item: item,
+      color: getCategoryColor(item['category']),
+      formatDate: formatDate,
+    );
+  }
+
   // Dashboard Cards
 
   Widget buildDashboardCards() {
@@ -108,32 +143,34 @@ class _HomeScreenState extends State<HomeScreen> {
         mainAxisSpacing: 10,
         childAspectRatio: width < 360 ? 1.1 : 1.4, // 🔥 height adjust
         children: [
-          buildCard("Today", getTodayExpense()),
-          buildCard("Week", getWeeklyExpense()),
-          buildCard("Month", getMonthlyExpense()),
-          buildCard("Year", getYearlyExpense()),
+          buildCard("Today", getTodayExpense(), Colors.blue),
+          buildCard("Week", getWeeklyExpense(), Colors.green),
+          buildCard("Month", getMonthlyExpense(), Colors.orange),
+          buildCard("Year", getYearlyExpense(), Colors.purple),
         ],
       ),
     );
   }
 
-  Widget buildCard(String title, double amount) {
+  Widget buildCard(String title, double amount, Color baseColor) {
     final width = MediaQuery.of(context).size.width;
-
-    final isSmall = width < 360; // 🔥 breakpoint
+    final isSmall = width < 360;
 
     return Container(
-      padding: EdgeInsets.all(isSmall ? 8 : 14), // 🔥 responsive padding
+      padding: EdgeInsets.all(isSmall ? 8 : 14),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
+        gradient: LinearGradient(
+          colors: [
+            baseColor.withOpacity(0.8),
+            baseColor,
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.15),
+            color: baseColor.withOpacity(0.3),
             blurRadius: 10,
           ),
         ],
@@ -143,17 +180,17 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Text(
             title,
-            maxLines: 1, // ✅ overflow fix
+            maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: Colors.white70,
-              fontSize: isSmall ? 11 : 14, // 🔥 responsive font
+              fontSize: isSmall ? 11 : 14,
             ),
           ),
 
           const Spacer(),
 
-          FittedBox( // 🔥 BIGGEST FIX
+          FittedBox(
             child: Text(
               "₹${amount.toStringAsFixed(0)}",
               style: TextStyle(
@@ -217,66 +254,165 @@ class _HomeScreenState extends State<HomeScreen> {
         child: const Icon(Icons.add, color: Colors.white),
       ),
       body: Container(
-  decoration: const BoxDecoration(
-    gradient: LinearGradient(
-      colors: [Color(0xFFEEF2F3), Color(0xFFDDE6ED)],
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-    ),
-  ),
-  child: SingleChildScrollView(   // ✅ MAIN FIX
-    child: Column(
-      children: [
-        const SizedBox(height: 20),
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFFEEF2F3), Color(0xFFDDE6ED)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: SingleChildScrollView(   // ✅ MAIN FIX
+          child: Column(
+            children: [
+              const SizedBox(height: 20),
 
-        buildDashboardCards(),
+              buildDashboardCards(),
 
-        const SizedBox(height: 10),
+              const SizedBox(height: 10),
 
-        expenses.isEmpty
-            ? const Center(child: Text("No Expenses Yet"))
-            : ListView.builder(
-                shrinkWrap: true,   // ✅ IMPORTANT
-                physics: const NeverScrollableScrollPhysics(), // ✅ IMPORTANT
-                itemCount: expenses.length,
-                itemBuilder: (context, index) {
-                  final item = expenses[index];
+              expenses.isEmpty
+                  ? const Center(child: Text("No Expenses Yet"))
+                  : ListView.builder(
+                      shrinkWrap: true,   // ✅ IMPORTANT
+                      physics: const NeverScrollableScrollPhysics(), // ✅ IMPORTANT
+                      itemCount: expenses.length,
+                      itemBuilder: (context, index) {
+                        final item = expenses[index];
 
-                  return Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: getCategoryColor(item['category']).withOpacity(0.2),
-                          child: Text(item['category'][0]),
-                        ),
-                        const SizedBox(width: 12),
-
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                        return Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Row(
                             children: [
-                              Text(item['category']),
-                              Text(item['note']),
+                              CircleAvatar(
+                                backgroundColor: getCategoryColor(item['category']).withOpacity(0.2),
+                                child: Icon(
+                                  getCategoryIcon(item['category']),
+                                  color: getCategoryColor(item['category']),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(item['category']),
+                                    Text(item['note']),
+                                    Text(
+                                      formatDate(item['date']), // 🔥 NEW
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              Text("₹${item['amount']}"),
                             ],
                           ),
-                        ),
-
-                        Text("₹${item['amount']}"),
-                      ],
+                        );
+                      },
                     ),
-                  );
-                },
+            ],
+          ),
+        ),
+      )
+    );
+  }
+}
+
+class ExpenseCard extends StatefulWidget {
+  final Map<String, dynamic> item;
+  final Color color;
+  final String Function(String) formatDate;
+
+  const ExpenseCard({
+    super.key,
+    required this.item,
+    required this.color,
+    required this.formatDate,
+  });
+
+  @override
+  State<ExpenseCard> createState() => _ExpenseCardState();
+}
+
+class _ExpenseCardState extends State<ExpenseCard> {
+  bool isExpanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final item = widget.item;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          isExpanded = !isExpanded; // 🔥 toggle
+        });
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            CircleAvatar(
+              backgroundColor: widget.color.withOpacity(0.2),
+              child: Icon(
+                Icons.category,
+                color: widget.color,
               ),
-      ],
-    ),
-  ),
-)
+            ),
+
+            const SizedBox(width: 12),
+
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(item['category']),
+
+                  // 🔥 NOTE TEXT
+                  Text(
+                    item['note'],
+                    maxLines: isExpanded ? null : 1,
+                    overflow: isExpanded
+                        ? TextOverflow.visible
+                        : TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Colors.black54, // 🔥 grayish
+                    ),
+                  ),
+
+                  Text(
+                    widget.formatDate(item['date']),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            Text(
+              "₹${item['amount']}",
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
