@@ -4,6 +4,7 @@ import '../../data/services/expense_service.dart';
 import 'analytics_screen.dart';
 import 'package:intl/intl.dart';
 import '../../core/utils/category_utils.dart';
+import 'dart:ui';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -191,6 +192,12 @@ class _HomeScreenState extends State<HomeScreen> {
     final width = MediaQuery.of(context).size.width;
     final isSmall = width < 360;
 
+    final formatter = NumberFormat.currency( 
+      locale: 'en_IN',
+      symbol: '₹',
+      decimalDigits: 2,
+    );
+
     return Container(
       padding: EdgeInsets.all(isSmall ? 8 : 14),
       decoration: BoxDecoration(
@@ -210,38 +217,41 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center, // ✅ vertical center
-        crossAxisAlignment: CrossAxisAlignment.center, // ✅ horizontal center
+      child: Stack(
         children: [
-          Text(
-            title,
-            textAlign: TextAlign.center, // optional
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: isSmall ? 14 : 18,
-              fontWeight: FontWeight.bold,
+          // 🔹 Title (Top Left)
+          Align(
+            alignment: Alignment.topLeft,
+            child: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: isSmall ? 14 : 18,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
 
-          const SizedBox(height: 18), // thoda spacing
-
-          TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0, end: amount),
-            duration: const Duration(milliseconds: 800),
-            curve: Curves.easeOutCubic,
-            builder: (context, value, child) {
-              return Text(
-                "₹${value.toStringAsFixed(2)}",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: isSmall ? 14 : 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              );
-            },
+          // 🔥 Amount (EXACT CENTER)
+          Align(
+            alignment: Alignment.center,
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: amount),
+              duration: const Duration(milliseconds: 800),
+              curve: Curves.easeOutCubic,
+              builder: (context, value, child) {
+                return Text(
+                  formatter.format(value),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: isSmall ? 14 : 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                );
+              },
+            ),
           ),
         ],
       ),
@@ -261,40 +271,28 @@ class _HomeScreenState extends State<HomeScreen> {
       AnalyticsScreen(),
     ];
     return Scaffold(
+      backgroundColor: Colors.transparent,
       extendBody: true,
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       
-      appBar: AppBar(
-        // title: const Text("SpendWise"),
-        title: Text(
-          selectedIndex == 0 ? "SpendWise" : "Analytics",
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color(0xFF0f2027),
+              Color(0xFF203a43),
+              Color(0xFF2c5364),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
         ),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-
-        // actions: [
-        //   IconButton(
-        //     icon: const Icon(Icons.bar_chart), // 📊 analytics icon
-        //     onPressed: () {
-        //       setState(() {
-        //         selectedIndex = 1;
-        //       });
-        //     },
-        //   ),
-        // ],
+        child: IndexedStack(
+          index: selectedIndex,
+          children: screens,
+        ),
       ),
       
-      // drawer: Drawer(
-      //   child: ListView(
-      //     children: const [
-      //       DrawerHeader(child: Text("Menu")),
-      //       ListTile(title: Text("Dashboard")),
-      //       ListTile(title: Text("Analytics")),
-      //       ListTile(title: Text("Settings")),
-      //     ],
-      //   ),
-      // ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: FloatingActionButton(
         tooltip: "Add Expense",
         onPressed: () async {
@@ -316,47 +314,60 @@ class _HomeScreenState extends State<HomeScreen> {
         child: const Icon(Icons.add, color: Colors.white),
       ),
       
-      body: IndexedStack(
-        index: selectedIndex,
-        children: screens,
+
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: ClipRRect(
+          // Rounded edges optional
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12), // 🔥 blur
+            child: AppBar(
+              backgroundColor: Colors.white.withOpacity(0.1), // semi-transparent glass
+              elevation: 0,
+              centerTitle: true,
+              title: Text(
+                selectedIndex == 0 ? "SpendWise" : "Analytics",
+                style: const TextStyle(color: Colors.black),
+              ),
+            ),
+          ),
+        ),
       ),
 
-      bottomNavigationBar: BottomAppBar(
-        // color: Colors.white70,
-        // elevation: 10,
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 8,
-        child: SizedBox(
-          height: 60,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              IconButton(
-                icon: Icon(
-                  Icons.home,
-                  color: selectedIndex == 0 ? Colors.deepPurple : Colors.grey,
-                ),
-                onPressed: () {
-                  setState(() {
-                    selectedIndex = 0;
-                  });
-                },
+      bottomNavigationBar: ClipRRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12), // match AppBar blur
+          child: BottomAppBar(
+            color: Colors.white.withOpacity(0.1), // semi-transparent
+            shape: const CircularNotchedRectangle(),
+            notchMargin: 8,
+            child: SizedBox(
+              height: 60,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  IconButton(
+                    icon: Icon(
+                      Icons.home,
+                      color: selectedIndex == 0 ? Colors.deepPurpleAccent : Colors.grey[400],
+                    ),
+                    onPressed: () {
+                      setState(() => selectedIndex = 0);
+                    },
+                  ),
+                  const SizedBox(width: 40), // space for FAB
+                  IconButton(
+                    icon: Icon(
+                      Icons.bar_chart,
+                      color: selectedIndex == 1 ? Colors.deepPurpleAccent : Colors.grey[400],
+                    ),
+                    onPressed: () {
+                      setState(() => selectedIndex = 1);
+                    },
+                  ),
+                ],
               ),
-
-              const SizedBox(width: 40), // space for FAB
-              // analytics page open 
-              IconButton(
-                icon: Icon(
-                  Icons.bar_chart,
-                  color: selectedIndex == 1 ? Colors.deepPurple : Colors.grey,
-                ),
-                onPressed: () {
-                  setState(() {
-                    selectedIndex = 1; 
-                  });
-                },
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -383,15 +394,7 @@ class HomeContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFFEEF2F3), Color(0xFFDDE6ED)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),  // ✅ MAIN FIX
-          child: Column(
+    return Column(
             children: [
               const SizedBox(height: 8),
 
@@ -402,7 +405,14 @@ class HomeContent extends StatelessWidget {
                // 🔥 IMPORTANT PART
               Expanded(
                 child: expenses.isEmpty
-                    ? const Center(child: Text("No Expenses Yet"))
+                    ? Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(Icons.receipt_long, size: 50, color: Colors.grey),
+                        SizedBox(height: 10),
+                        Text("No Expenses Yet"),
+                      ],
+                    )
                     : ListView.builder(
                         itemCount: expenses.length,
                         padding: const EdgeInsets.only(bottom: 80), // small safe space
@@ -543,7 +553,6 @@ class HomeContent extends StatelessWidget {
                     ),
               ),
             ],
-          ),
         
     ); // 👈 pura jo body me tha
   }
@@ -587,88 +596,86 @@ class _ExpenseCardState extends State<ExpenseCard> {
   bool isExpanded = false;
 
   @override
-  Widget build(BuildContext context) {
-    final item = widget.item;
+Widget build(BuildContext context) {
+  final item = widget.item;
 
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          isExpanded = !isExpanded; // 🔥 toggle
-        });
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          children: [
-            CircleAvatar(
-              backgroundColor: widget.color.withOpacity(0.2),
-              child: Icon(
-                getCategoryIcon(item['category']),
-                color: widget.color,
+  return GestureDetector(
+    onTap: () {
+      setState(() {
+        isExpanded = !isExpanded;
+      });
+    },
+    child: ClipRRect(
+      borderRadius: BorderRadius.circular(16), // same rounded corners
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12), // blur effect
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white24),
               ),
-            ),
-
-            const SizedBox(width: 12),
-
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(item['category']),
-
-                  // 🔥 ANIMATED NOTE
-                  AnimatedCrossFade(
-                    duration: const Duration(milliseconds: 250),
-                    crossFadeState: isExpanded
-                        ? CrossFadeState.showSecond
-                        : CrossFadeState.showFirst,
-
-                    firstChild: Text(
-                      item['note'],
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Colors.black54,
+          child: Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: widget.color.withOpacity(0.2),
+                child: Icon(
+                  getCategoryIcon(item['category']),
+                  color: widget.color,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(item['category'],style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold)),
+                    
+                    AnimatedCrossFade(
+                      duration: const Duration(milliseconds: 250),
+                      crossFadeState: isExpanded
+                          ? CrossFadeState.showSecond
+                          : CrossFadeState.showFirst,
+                      firstChild: Text(
+                        item['note'],
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.white70,
+                        ),
+                      ),
+                      secondChild: Text(
+                        item['note'],
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.white70,
+                        ),
                       ),
                     ),
-
-                    secondChild: Text(
-                      item['note'],
+                    const SizedBox(height: 4),
+                    Text(
+                      widget.formatDate(item['date']),
                       style: const TextStyle(
-                        fontSize: 13,
-                        color: Colors.black54,
+                        fontSize: 11,
+                        color: Colors.grey,
+                        fontWeight: FontWeight.bold
                       ),
                     ),
-                  ),
-
-                  const SizedBox(height: 4),
-
-                  Text(
-                    widget.formatDate(item['date']),
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-
-            Text(
-              "₹${item['amount'].toStringAsFixed(2)}",
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ],
+              Text(
+                "₹${item['amount'].toStringAsFixed(2)}",
+                style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
         ),
-      )
-    );
-  }
+      ),
+    ),
+  );
+}
 }
