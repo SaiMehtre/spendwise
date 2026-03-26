@@ -63,11 +63,11 @@ class AnalyticsScreen extends StatelessWidget {
           child: Column(
             children: [
               buildTopCard(total),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               buildTopCategoryCard(topCategory, max),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               buildPieChart(categoryMap),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               buildCategoryBreakdown(categoryMap),
             ],
           ),
@@ -84,7 +84,7 @@ class AnalyticsScreen extends StatelessWidget {
     // );
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(16),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
         child: Container(
@@ -92,7 +92,7 @@ class AnalyticsScreen extends StatelessWidget {
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: Colors.white24),
           ),
           child: Column(
@@ -130,7 +130,7 @@ class AnalyticsScreen extends StatelessWidget {
 
   Widget buildTopCategoryCard(String category, double amount) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(16),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
         child: Container(
@@ -138,19 +138,19 @@ class AnalyticsScreen extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: Colors.white24),
           ),
           child: Row(
             children: [
               const Text(
                 "Top Category",
-                style: TextStyle(color: Colors.white70),
+                style: TextStyle(color: Colors.white70,fontWeight: FontWeight.bold),
               ),
               const Spacer(),
               Flexible(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
                       category,
@@ -173,47 +173,52 @@ class AnalyticsScreen extends StatelessWidget {
   }
 
   Widget buildCategoryBreakdown(Map<String, double> data) {
-    return Column(
-      children: data.entries.map((entry) {
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-            child: Container(
-              width: double.infinity,
-              margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white24),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      entry.key,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: Colors.white),
+  return SingleChildScrollView(
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(6, 6, 6, 90), // bottom 90 extra
+      child: Column(
+        children: data.entries.map((entry) {
+          return ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+              child: Container(
+                width: double.infinity,
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.white24),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        entry.key,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(color: Colors.white),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  FittedBox(
-                    child: Text(
-                      "₹${entry.value.toStringAsFixed(2)}",
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, color: Colors.white),
+                    const SizedBox(width: 8),
+                    FittedBox(
+                      child: Text(
+                        "₹${entry.value.toStringAsFixed(2)}",
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        );
-      }).toList(),
-    );
-  }
+          );
+        }).toList(),
+      ),
+    ),
+  );
+}
 
   List<PieChartSectionData> buildPieSections(Map<String, double> data) {
     double total = data.values.fold(0, (sum, val) => sum + val);
@@ -239,7 +244,7 @@ class AnalyticsScreen extends StatelessWidget {
   Widget buildPieChart(Map<String, double> data) {
     double total = data.values.fold(0, (sum, val) => sum + val);
     return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(16),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
         child: Container(
@@ -247,7 +252,7 @@ class AnalyticsScreen extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: Colors.white24),
           ),
           child: Column(
