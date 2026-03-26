@@ -44,7 +44,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     } else {
       service.updateExpense(widget.index!, data);
     }
-    Navigator.pop(context);
+    Navigator.pop(context, true); 
   }
 
   @override
@@ -77,7 +77,12 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             end: Alignment.bottomRight,
           ),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 65),
+        padding: EdgeInsets.fromLTRB(
+          20,
+          kToolbarHeight + MediaQuery.of(context).padding.top + 10, // 🔥 dynamic top
+          20,
+          20,
+        ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(24),
           child: BackdropFilter(

@@ -77,12 +77,6 @@ class AnalyticsScreen extends StatelessWidget {
   }
 
   Widget buildTopCard(double total) {
-    // final formatter = NumberFormat.currency(
-    //   locale: 'en_IN',
-    //   symbol: '₹',
-    //   decimalDigits: 2,
-    // );
-
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
       child: BackdropFilter(
@@ -91,15 +85,28 @@ class AnalyticsScreen extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.1),
+            gradient: LinearGradient(
+              colors: [
+                Color(0xFF11998E), // teal green
+                Color(0xFF38EF7D), // light green
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white24),
+            boxShadow: [
+              BoxShadow(
+                color: Color(0xFF38EF7D).withOpacity(0.4),
+                blurRadius: 18,
+                offset: Offset(0, 6),
+              ),
+            ],
           ),
           child: Column(
             children: [
               const Text(
                 "Total Spend",
-                style: TextStyle(color: Colors.white70),
+                style: TextStyle(color: Colors.white70,fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
               TweenAnimationBuilder<double>(
@@ -137,9 +144,21 @@ class AnalyticsScreen extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.1),
+            gradient: LinearGradient(
+              colors: [
+                Colors.orange.withOpacity(0.8),
+                Colors.deepOrange,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.orange.withOpacity(0.4),
+                blurRadius: 15,
+              ),
+            ],
           ),
           child: Row(
             children: [
@@ -156,11 +175,11 @@ class AnalyticsScreen extends StatelessWidget {
                       category,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: Colors.white),
+                      style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold),
                     ),
                     Text(
                       "₹${amount.toStringAsFixed(2)}",
-                      style: const TextStyle(color: Colors.white),
+                      style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -222,7 +241,23 @@ class AnalyticsScreen extends StatelessWidget {
 
   List<PieChartSectionData> buildPieSections(Map<String, double> data) {
     double total = data.values.fold(0, (sum, val) => sum + val);
-    if (total == 0) return [];
+
+    // 👇 EMPTY DATA CASE
+    if (total == 0) {
+      return [
+        PieChartSectionData(
+          color: Colors.white24,
+          value: 1,
+          title: "No Data",
+          radius: 60,
+          titleStyle: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+      ];
+    }
 
     return data.entries.map((entry) {
       final percent = (entry.value / total) * 100;
@@ -275,9 +310,12 @@ class AnalyticsScreen extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               Column(
-                children: data.entries.map((entry) {
-                  final percent = (entry.value / total) * 100;
-                  final color = getCategoryColor(entry.key);
+                children: (data.isEmpty
+                    ? ["Food", "Travel", "Shopping", "Bills", "Others"]
+                    : data.keys).map((key) {
+                  final value = data[key] ?? 0;
+                  final percent = total == 0 ? 0 : (value / total) * 100;
+                  final color = getCategoryColor(key);
 
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4),
@@ -287,15 +325,17 @@ class AnalyticsScreen extends StatelessWidget {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            entry.key,
+                            key,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(color: Colors.white),
                           ),
                         ),
                         Text(
-                          "₹${entry.value.toStringAsFixed(2)} (${percent.toStringAsFixed(1)}%)",
+                          "₹${value.toStringAsFixed(2)} (${percent.toStringAsFixed(1)}%)",
                           style: const TextStyle(
-                              fontWeight: FontWeight.w500, color: Colors.white),
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white,
+                          ),
                         ),
                       ],
                     ),

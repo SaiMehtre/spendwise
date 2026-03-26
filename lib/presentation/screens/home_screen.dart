@@ -5,6 +5,7 @@ import 'analytics_screen.dart';
 import 'package:intl/intl.dart';
 import '../../core/utils/category_utils.dart';
 import 'dart:ui';
+import 'history_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,11 +18,6 @@ class _HomeScreenState extends State<HomeScreen> {
   final service = ExpenseService();
   List<Map<String, dynamic>> expenses = [];
   int selectedIndex = 0;
-
-  // final List<Widget> screens = [
-  //   const HomeContent(),     // 👈 dashboard + list wala UI
-  //   AnalyticsScreen(),       // 👈 tera existing screen
-  // ];
 
   @override
   void initState() {
@@ -44,22 +40,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return total;
   }
-
-  // Color getCategoryColor(String category) {
-  //   switch (category) {
-  //     case "Food":
-  //       return Colors.orange;
-  //     case "Travel":
-  //       return Colors.blue;
-  //     case "Shopping":
-  //       return Colors.purple;
-  //     case "Bills":
-  //       return Colors.red;
-  //     default:
-  //       return Colors.grey;
-  //   }
-  // }
-
   // Today Spend
   double getTodayExpense() {
     final now = DateTime.now();
@@ -120,28 +100,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // Dashboard Cards
-
-  // Widget buildDashboardCards() {
-  //   final width = MediaQuery.of(context).size.width;
-
-  //   return Padding(
-  //     padding: const EdgeInsets.all(12),
-  //     child: GridView.count(
-  //       crossAxisCount: width < 300 ? 1 : 2, // 🔥 ultra small fix
-  //       shrinkWrap: true,
-  //       physics: const NeverScrollableScrollPhysics(),
-  //       crossAxisSpacing: 8,
-  //       mainAxisSpacing: 8,
-  //       childAspectRatio: width < 360 ? 1.4 : 1.8, // 🔥 height adjust
-  //       children: [
-  //         buildCard("Today", getTodayExpense(), Colors.blue),
-  //         buildCard("Week", getWeeklyExpense(), Colors.green),
-  //         buildCard("Month", getMonthlyExpense(), Colors.orange),
-  //         buildCard("Year", getYearlyExpense(), Colors.purple),
-  //       ],
-  //     ),
-  //   );
-  // }
 
   Widget buildDashboardCards() {
   return Padding(
@@ -269,7 +227,14 @@ class _HomeScreenState extends State<HomeScreen> {
         formatDate: formatDate,
       ),
       AnalyticsScreen(),
+      HistoryScreen(),
     ];
+
+    final Map<int, String> screenTitles = {
+      0: "SpendWise",
+      1: "Analytics",
+      2: "History",
+    };
     return Scaffold(
       backgroundColor: Colors.transparent,
       extendBody: true,
@@ -326,7 +291,7 @@ class _HomeScreenState extends State<HomeScreen> {
               elevation: 0,
               centerTitle: true,
               title: Text(
-                selectedIndex == 0 ? "SpendWise" : "Analytics",
+                screenTitles[selectedIndex] ?? "App",
                 style: const TextStyle(color: Colors.black),
               ),
             ),
@@ -344,7 +309,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: SizedBox(
               height: 60,
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   IconButton(
                     icon: Icon(
@@ -363,6 +328,20 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     onPressed: () {
                       setState(() => selectedIndex = 1);
+                    },
+                  ),
+
+                  const SizedBox(width: 40),
+
+                  IconButton(
+                    icon: Icon(
+                      Icons.history,
+                      color: selectedIndex == 2
+                          ? Colors.deepPurpleAccent
+                          : Colors.grey[400],
+                    ),
+                    onPressed: () {
+                      setState(() => selectedIndex = 2);
                     },
                   ),
                 ],
@@ -421,7 +400,7 @@ class HomeContent extends StatelessWidget {
 
                       return Dismissible(
                         // key: UniqueKey(),
-                        key: ValueKey(item['date']), // ✅
+                        key: ValueKey(item['key']), // ✅
                         direction: DismissDirection.horizontal,
                         dismissThresholds: const {
                           DismissDirection.startToEnd: 0.4,
