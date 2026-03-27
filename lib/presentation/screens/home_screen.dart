@@ -7,6 +7,7 @@ import '../../core/utils/category_utils.dart';
 import 'dart:ui';
 import 'history_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import '../../main.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -274,19 +275,17 @@ class _HomeScreenState extends State<HomeScreen> {
           if (result != null && result['success'] == true) {
             final isUpdate = result['isUpdate'] == true;
 
-            // await Future.delayed(const Duration(milliseconds: 100));
-              ScaffoldMessenger.of(context, rootNavigator: true).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    isUpdate
-                        ? "Expense Updated Successfully"
-                        : "Expense Added Successfully",
-                  ),
-                  backgroundColor: Colors.green,
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  isUpdate
+                      ? "Expense Updated Successfully"
+                      : "Expense Added Successfully",
                 ),
-              );
+                backgroundColor: Colors.green,
+              ),
+            );
           }
-          // loadExpenses(); // 👈 refresh after adding
         },
         backgroundColor: const Color(0xFF6A11CB),
         child: const Icon(Icons.add, color: Colors.white),
@@ -454,16 +453,32 @@ class HomeContent extends StatelessWidget {
                                 ),
                               );
                             } else {
-                              await Navigator.push(
+                              final result = await Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (_) => AddExpenseScreen(
                                     expense: item,
-                                    keyValue: item['key'], // 🔥 FIXED
+                                    keyValue: item['key'],
                                   ),
                                 ),
                               );
-                              return false; // ❌ don't dismiss
+
+                              if (result != null && result['success'] == true) {
+                                final isUpdate = result['isUpdate'] == true;
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      isUpdate
+                                          ? "Expense Updated Successfully"
+                                          : "Expense Added Successfully",
+                                    ),
+                                    backgroundColor: Colors.green,
+                                  ),
+                                );
+                              }
+
+                              return false;
                             }
                           },
 

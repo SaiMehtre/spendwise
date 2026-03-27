@@ -12,14 +12,18 @@ void main() async {
   runApp(const MyApp());
 }
 
+final GlobalKey<ScaffoldMessengerState> messengerKey =
+    GlobalKey<ScaffoldMessengerState>();
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      scaffoldMessengerKey: messengerKey,
       debugShowCheckedModeBanner: false,
-      title: 'Expense Tracker',
+      title: 'SpendWise',
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       home: HomeScreen(),
