@@ -4,6 +4,7 @@ import '../../core/utils/category_utils.dart';
 import 'home_screen.dart';
 import 'add_expense_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:intl/intl.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -33,7 +34,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   String formatDate(String dateStr) {
     final date = DateTime.parse(dateStr);
-    return "${date.day}/${date.month}/${date.year}";
+    return DateFormat('dd MMM yyyy • hh:mm a').format(date);
   }
 
   @override

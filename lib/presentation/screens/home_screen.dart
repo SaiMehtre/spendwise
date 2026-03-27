@@ -7,7 +7,6 @@ import '../../core/utils/category_utils.dart';
 import 'dart:ui';
 import 'history_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import '../../main.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -90,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   String formatDate(String dateStr) {
     final date = DateTime.parse(dateStr);
-    return DateFormat('dd MMM, hh:mm a').format(date);
+    return DateFormat('dd MMM yyyy • hh:mm a').format(date);
   }
 
   // To EXpand Note Card
@@ -106,49 +105,90 @@ class _HomeScreenState extends State<HomeScreen> {
   // Dashboard Cards
 
   Widget buildDashboardCards() {
-  return Padding(
-    padding: const EdgeInsets.all(12),
-    child: Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: AspectRatio(
-                aspectRatio: 1.6,
-                child: buildCard("Today", getTodayExpense(), Colors.blue),
+    return ValueListenableBuilder(
+      valueListenable: service.box.listenable(),
+      builder: (context, box, _) {
+
+        final expenses = box.keys.map((key) {
+          final item = Map<String, dynamic>.from(box.get(key));
+          item['key'] = key;
+          return item;
+        }).toList();
+
+        double getTotal(List list) {
+          return list.fold(0, (sum, e) => sum + e['amount']);
+        }
+
+        final now = DateTime.now();
+
+        final today = expenses.where((e) {
+          final d = DateTime.parse(e['date']);
+          return d.day == now.day &&
+              d.month == now.month &&
+              d.year == now.year;
+        }).toList();
+
+        final weekStart = now.subtract(Duration(days: now.weekday - 1));
+        final week = expenses.where((e) {
+          final d = DateTime.parse(e['date']);
+          return d.isAfter(weekStart);
+        }).toList();
+
+        final month = expenses.where((e) {
+          final d = DateTime.parse(e['date']);
+          return d.month == now.month && d.year == now.year;
+        }).toList();
+
+        final year = expenses.where((e) {
+          final d = DateTime.parse(e['date']);
+          return d.year == now.year;
+        }).toList();
+
+        return Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: AspectRatio(
+                      aspectRatio: 1.6,
+                      child: buildCard("Today", getTotal(today), Colors.blue),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: AspectRatio(
+                      aspectRatio: 1.6,
+                      child: buildCard("Week", getTotal(week), Colors.green),
+                    ),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: AspectRatio(
-                aspectRatio: 1.6,
-                child: buildCard("Week", getWeeklyExpense(), Colors.green),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: AspectRatio(
+                      aspectRatio: 1.6,
+                      child: buildCard("Month", getTotal(month), Colors.orange),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: AspectRatio(
+                      aspectRatio: 1.6,
+                      child: buildCard("Year", getTotal(year), Colors.purple),
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: AspectRatio(
-                aspectRatio: 1.6,
-                child: buildCard("Month", getMonthlyExpense(), Colors.orange),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: AspectRatio(
-                aspectRatio: 1.6,
-                child: buildCard("Year", getYearlyExpense(), Colors.purple),
-              ),
-            ),
-          ],
-        ),
-      ],
-    ),
-  );
-}
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   Widget buildCard(String title, double amount, Color baseColor) {
     final width = MediaQuery.of(context).size.width;
