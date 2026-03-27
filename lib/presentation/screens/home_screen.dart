@@ -446,6 +446,7 @@ class HomeContent extends StatelessWidget {
                     }).toList()
                       ..sort((a, b) => DateTime.parse(b['date'])
                           .compareTo(DateTime.parse(a['date'])));
+                    
 
                     if (expenses.isEmpty) {
                       return Column(
@@ -458,11 +459,13 @@ class HomeContent extends StatelessWidget {
                       );
                     }
 
+                    final recentExpenses = expenses.take(10).toList();
+                    
                     return ListView.builder(
-                      itemCount: expenses.length,
+                      itemCount: recentExpenses.length,
                       padding: const EdgeInsets.only(bottom: 80),
                       itemBuilder: (context, index) {
-                        final item = expenses[index];
+                        final item = recentExpenses[index];
 
                         return Dismissible(
                           key: ValueKey(item['key']), // ✅ IMPORTANT
