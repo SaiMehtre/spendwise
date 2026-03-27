@@ -269,6 +269,9 @@ class _HomeScreenState extends State<HomeScreen> {
         loadExpenses: loadExpenses,
         buildDashboardCards: buildDashboardCards,
         formatDate: formatDate,
+        onTabChange: (index) {          // ✅ ADD THIS
+          setState(() => selectedIndex = index);
+        },
       ),
       AnalyticsScreen(),
       HistoryScreen(),
@@ -413,6 +416,7 @@ class HomeContent extends StatelessWidget {
   final VoidCallback loadExpenses;
   final Function() buildDashboardCards;
   final String Function(String) formatDate;
+  final Function(int) onTabChange;
 
   const HomeContent({
     super.key,
@@ -421,6 +425,7 @@ class HomeContent extends StatelessWidget {
     required this.loadExpenses,
     required this.buildDashboardCards,
     required this.formatDate,
+    required this.onTabChange,
   });
 
   @override
@@ -460,11 +465,56 @@ class HomeContent extends StatelessWidget {
                     }
 
                     final recentExpenses = expenses.take(10).toList();
-                    
+
                     return ListView.builder(
-                      itemCount: recentExpenses.length,
+                      itemCount: recentExpenses.length + 1,
                       padding: const EdgeInsets.only(bottom: 80),
                       itemBuilder: (context, index) {
+
+                        // 🔥 LAST ITEM = BUTTON
+                        if (index == recentExpenses.length) {
+                          return Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 10, 16, 100), // 👈 bottom safe space
+                            child: GestureDetector(
+                              onTap: () {
+                                onTabChange(2); // 🔥 history tab
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(14),
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      Color(0xFF6A11CB),
+                                      Color(0xFF2575FC),
+                                    ],
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.deepPurple.withOpacity(0.4),
+                                      blurRadius: 10,
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: const [
+                                    Text(
+                                      "View All Expenses",
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    SizedBox(width: 8),
+                                    Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+
                         final item = recentExpenses[index];
 
                         return Dismissible(
@@ -661,7 +711,7 @@ Widget build(BuildContext context) {
     child: ClipRRect(
       borderRadius: BorderRadius.circular(16), // same rounded corners
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12), // blur effect
+        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8), // blur effect
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           padding: const EdgeInsets.all(12),
