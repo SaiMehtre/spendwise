@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../core/utils/category_utils.dart';
 import 'dart:ui';
 import 'history_screen.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -263,18 +264,27 @@ class _HomeScreenState extends State<HomeScreen> {
       floatingActionButton: FloatingActionButton(
         tooltip: "Add Expense",
         onPressed: () async {
-          await Navigator.push(
+          final result = await Navigator.push(
             context,
-            PageRouteBuilder(
-              pageBuilder: (_, __, ___) => const AddExpenseScreen(),
-              transitionsBuilder: (_, animation, __, child) {
-                return ScaleTransition(
-                  scale: animation,
-                  child: child,
-                );
-              },
+            MaterialPageRoute(
+              builder: (_) => AddExpenseScreen(),
             ),
           );
+
+          if (result != null && result['success'] == true) {
+            final isUpdate = result['isUpdate'] == true;
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  isUpdate
+                      ? "Expense Updated Successfully"
+                      : "Expense Added Successfully",
+                ),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
           loadExpenses(); // 👈 refresh after adding
         },
         backgroundColor: const Color(0xFF6A11CB),
@@ -385,153 +395,156 @@ class HomeContent extends StatelessWidget {
 
                // 🔥 IMPORTANT PART
               Expanded(
-                child: expenses.isEmpty
-                    ? Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Icon(Icons.receipt_long, size: 50, color: Colors.grey),
-                        SizedBox(height: 10),
-                        Text("No Expenses Yet"),
-                      ],
-                    )
-                    : ListView.builder(
-                        itemCount: expenses.length,
-                        padding: const EdgeInsets.only(bottom: 80), // small safe space
-                        itemBuilder: (context, index) {
-                          final item = expenses[index];
+                child: ValueListenableBuilder(
+                  valueListenable: service.box.listenable(),
+                  builder: (context, box, _) {
 
-                      return Dismissible(
-                        // key: UniqueKey(),
-                        key: ValueKey(item['key']), // ✅
-                        direction: DismissDirection.horizontal,
-                        dismissThresholds: const {
-                          DismissDirection.startToEnd: 0.4,
-                          DismissDirection.endToStart: 0.4,
-                        },
+                    final expenses = box.keys.map((key) {
+                      final item = Map<String, dynamic>.from(box.get(key));
+                      item['key'] = key;
+                      return item;
+                    }).toList()
+                      ..sort((a, b) => DateTime.parse(b['date'])
+                          .compareTo(DateTime.parse(a['date'])));
 
-                        // 🔥 CONFIRM FIRST
-                        confirmDismiss: (direction) async {
-                          if (direction == DismissDirection.startToEnd) {
-                            // 🗑 DELETE CONFIRM
-                            return await showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text("Delete?"),
-                                content: const Text("Are you sure you want to delete this expense?"),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context, false),
-                                    child: const Text("Cancel"),
+                    if (expenses.isEmpty) {
+                      return Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          Icon(Icons.receipt_long, size: 50, color: Colors.grey),
+                          SizedBox(height: 10),
+                          Text("No Expenses Yet"),
+                        ],
+                      );
+                    }
+
+                    return ListView.builder(
+                      itemCount: expenses.length,
+                      padding: const EdgeInsets.only(bottom: 80),
+                      itemBuilder: (context, index) {
+                        final item = expenses[index];
+
+                        return Dismissible(
+                          key: ValueKey(item['key']), // ✅ IMPORTANT
+
+                          direction: DismissDirection.horizontal,
+                          dismissThresholds: const {
+                            DismissDirection.startToEnd: 0.4,
+                            DismissDirection.endToStart: 0.4,
+                          },
+
+                          confirmDismiss: (direction) async {
+                            if (direction == DismissDirection.startToEnd) {
+                              return await showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text("Delete?"),
+                                  content: const Text("Are you sure you want to delete this expense?"),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context, false),
+                                      child: const Text("Cancel"),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context, true),
+                                      child: const Text("Delete"),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            } else {
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => AddExpenseScreen(
+                                    expense: item,
+                                    keyValue: item['key'], // 🔥 FIXED
                                   ),
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context, true),
-                                    child: const Text("Delete"),
+                                ),
+                              );
+                              return false; // ❌ don't dismiss
+                            }
+                          },
+
+                          onDismissed: (direction) {
+                            final deletedItem = Map<String, dynamic>.from(item);
+                            final deletedKey = item['key'];
+
+                            service.deleteExpense(deletedKey);
+
+                            final messenger = ScaffoldMessenger.of(context);
+                            messenger.clearSnackBars();
+
+                            messenger.showSnackBar(
+                              SnackBar(
+                                duration: const Duration(seconds: 3),
+                                backgroundColor: Colors.orange,
+                                behavior: SnackBarBehavior.floating,
+                                margin: const EdgeInsets.all(12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                content: const Text(
+                                  "Expense deleted",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                ],
-                              ),
-                            );
-                          } else {
-                            // ✏️ EDIT (NO DISMISS)
-                            await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => AddExpenseScreen(
-                                  expense: item,
-                                  index: index,
+                                ),
+                                action: SnackBarAction(
+                                  label: "UNDO",
+                                  textColor: Colors.white,
+                                  onPressed: () {
+                                    service.addExpenseWithKey(deletedKey, deletedItem); // 🔥 FIXED
+                                  },
                                 ),
                               ),
                             );
-                            loadExpenses();
-                            return false; // ❌ don't dismiss
-                          }
-                        },
+                          },
 
-                        // 🔥 ACTUAL DELETE HERE ONLY
-                        onDismissed: (direction) {
-                          final deletedItem = item;
-
-                          service.deleteExpense(item['key']);
-
-                          loadExpenses(); // 👈 parent refresh karega
-
-                          final messenger = ScaffoldMessenger.of(context);
-
-                          messenger.clearSnackBars();
-
-                          final snackBar = SnackBar(
-                            duration: const Duration(seconds: 3),
-                            backgroundColor: Colors.orange,
-                            behavior: SnackBarBehavior.floating,
-                            margin: EdgeInsets.all(12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                          background: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(16),
                             ),
-                            content: const Text("Expense deleted",style: TextStyle(color: Colors.white)),
-                            action: SnackBarAction(
-                              label: "UNDO",
-                              textColor: Colors.white,
-                              onPressed: () {
-                                service.addExpense(deletedItem);
-
-                                loadExpenses();
-
-                                messenger.hideCurrentSnackBar(); // 👈 close on click
-                              },
+                            alignment: Alignment.centerLeft,
+                            padding: const EdgeInsets.only(left: 20),
+                            child: Row(
+                              children: const [
+                                Icon(Icons.delete, color: Colors.white),
+                                SizedBox(width: 8),
+                                Text("Delete", style: TextStyle(color: Colors.white)),
+                              ],
                             ),
-                          );
-
-                          messenger.showSnackBar(snackBar);
-
-                          // 🔥 FORCE AUTO DISMISS AFTER 3 SEC
-                          Future.delayed(const Duration(seconds: 3), () {
-                            messenger.hideCurrentSnackBar();
-                          });
-                        },
-
-                        // 🟥 LEFT → DELETE
-                        background: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.red,
-                            borderRadius: BorderRadius.circular(16),
                           ),
-                          alignment: Alignment.centerLeft,
-                          padding: const EdgeInsets.only(left: 20),
-                          child: Row(
-                            children: const [
-                              Icon(Icons.delete, color: Colors.white),
-                              SizedBox(width: 8),
-                              Text("Delete", style: TextStyle(color: Colors.white)),
-                            ],
-                          ),
-                        ),
 
-                        // 🟦 RIGHT → EDIT
-                        secondaryBackground: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.blue,
-                            borderRadius: BorderRadius.circular(16),
+                          secondaryBackground: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.blue,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(right: 20),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: const [
+                                Text("Edit", style: TextStyle(color: Colors.white)),
+                                SizedBox(width: 8),
+                                Icon(Icons.edit, color: Colors.white),
+                              ],
+                            ),
                           ),
-                          alignment: Alignment.centerRight,
-                          padding: const EdgeInsets.only(right: 20),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: const [
-                              Text("Edit", style: TextStyle(color: Colors.white)),
-                              SizedBox(width: 8),
-                              Icon(Icons.edit, color: Colors.white),
-                            ],
-                          ),
-                        ),
 
-                        child: ExpenseCard(
-                          key: ValueKey(index),
-                          item: item,
-                          color: getCategoryColor(item['category']),
-                          formatDate: formatDate,
-                        ),
-                      );
-                    }
-                    ),
+                          child: ExpenseCard(
+                            item: item,
+                            color: getCategoryColor(item['category']),
+                            formatDate: formatDate,
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
             ],
         

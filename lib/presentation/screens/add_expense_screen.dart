@@ -4,9 +4,9 @@ import 'dart:ui';
 
 class AddExpenseScreen extends StatefulWidget {
   final Map<String, dynamic>? expense;
-  final int? index;
+  final dynamic keyValue;
 
-  const AddExpenseScreen({super.key, this.expense, this.index});
+  const AddExpenseScreen({super.key, this.expense, this.keyValue});
 
   @override
   State<AddExpenseScreen> createState() => _AddExpenseScreenState();
@@ -33,18 +33,29 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
   void saveExpense() {
     final service = ExpenseService();
+
     final data = {
       "amount": double.tryParse(_amountController.text) ?? 0,
       "category": selectedCategory,
       "note": _noteController.text,
-      "date": DateTime.now().toString(),
+      "date": widget.expense != null
+          ? widget.expense!['date']
+          : DateTime.now().toString(),
     };
-    if (widget.index == null) {
-      service.addExpense(data);
+
+    if (widget.keyValue == null) {
+      final key = DateTime.now().millisecondsSinceEpoch.toString(); // ✅ string key
+      data['key'] = key;
+      service.addExpenseWithKey(key, data);
     } else {
-      service.updateExpense(widget.index!, data);
+      service.updateExpense(widget.keyValue!, data);
     }
-    Navigator.pop(context, true); 
+
+    // 🔥 JUST RETURN RESULT
+    Navigator.pop(context, {
+      "success": true,
+      "isUpdate": widget.keyValue != null,
+    });
   }
 
   @override
@@ -196,10 +207,15 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     // Save Button
                     ElevatedButton(
                       onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          saveExpense();
-                        }
-                      },
+  print("Button Clicked"); // 👈 check 1
+
+  if (_formKey.currentState!.validate()) {
+    print("Validation Passed"); // 👈 check 2
+    saveExpense();
+  } else {
+    print("Validation Failed ❌"); // 👈 check 3
+  }
+},
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
                         backgroundColor: const Color(0xFF6A11CB),
