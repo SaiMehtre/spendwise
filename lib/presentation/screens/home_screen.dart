@@ -27,7 +27,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void loadExpenses() {
     setState(() {
-      expenses = service.getExpenses();
+      expenses = service.getExpenses()
+      ..sort((a, b) => DateTime.parse(b['date'])
+          .compareTo(DateTime.parse(a['date'])));
     });
   }
 
@@ -448,7 +450,7 @@ class HomeContent extends StatelessWidget {
                         onDismissed: (direction) {
                           final deletedItem = item;
 
-                          service.deleteExpense(index);
+                          service.deleteExpense(item['key']);
 
                           loadExpenses(); // 👈 parent refresh karega
 
