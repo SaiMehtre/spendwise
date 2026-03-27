@@ -274,18 +274,19 @@ class _HomeScreenState extends State<HomeScreen> {
           if (result != null && result['success'] == true) {
             final isUpdate = result['isUpdate'] == true;
 
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  isUpdate
-                      ? "Expense Updated Successfully"
-                      : "Expense Added Successfully",
+            // await Future.delayed(const Duration(milliseconds: 100));
+              ScaffoldMessenger.of(context, rootNavigator: true).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    isUpdate
+                        ? "Expense Updated Successfully"
+                        : "Expense Added Successfully",
+                  ),
+                  backgroundColor: Colors.green,
                 ),
-                backgroundColor: Colors.green,
-              ),
-            );
+              );
           }
-          loadExpenses(); // 👈 refresh after adding
+          // loadExpenses(); // 👈 refresh after adding
         },
         backgroundColor: const Color(0xFF6A11CB),
         child: const Icon(Icons.add, color: Colors.white),
