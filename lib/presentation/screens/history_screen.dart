@@ -15,25 +15,8 @@ class HistoryScreen extends StatefulWidget {
 
 class _HistoryScreenState extends State<HistoryScreen> {
   final service = ExpenseService();
-  List<Map<String, dynamic>> expenses = [];
 
-  // HistoryScreen 
-  void loadExpenses() {
-    final box = service.box;
-
-    //  print("TOTAL ITEMS IN HIVE: ${box.length}");
-
-    setState(() {
-      expenses = box.keys.map((key) {
-        final item = Map<String, dynamic>.from(box.get(key));
-        item['key'] = key; // 🔥 store key
-        return item;
-      }).toList();
-    });
-  }
-
-  String formatDate(String dateStr) {
-    final date = DateTime.parse(dateStr);
+  String formatDate(DateTime date) {
     return DateFormat('dd MMM yyyy • hh:mm a').format(date);
   }
 
@@ -77,15 +60,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         ),
                       ],
                     );
-                  }
+                  }                  
 
                   final expenses = box.keys.map((key) {
                     final item = Map<String, dynamic>.from(box.get(key));
                     item['key'] = key;
+                    item['parsedDate'] = DateTime.parse(item['date']); //
                     return item;
                   }).toList()
-                    ..sort((a, b) => DateTime.parse(b['date'])
-                        .compareTo(DateTime.parse(a['date'])));
+                    ..sort((a, b) => b['parsedDate'].compareTo(a['parsedDate']));                    
 
                   return ListView.builder(
                     padding: const EdgeInsets.only(bottom: 80),
@@ -129,6 +112,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             );
 
                             if (result != null && result['success'] == true) {
+                              if (!mounted) return false;
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
@@ -220,7 +204,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         child: ExpenseCard(
                           item: item,
                           color: getCategoryColor(item['category']),
-                          formatDate: formatDate,
+                          formatDate: (_) => formatDate(item['parsedDate']),
                         ),
                       );
                     },
