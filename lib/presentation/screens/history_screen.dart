@@ -129,42 +129,48 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         },
 
                         onDismissed: (direction) {
-                          final deletedItem = item;
+  final deletedItem = Map<String, dynamic>.from(item);
 
-                          service.box.delete(item['key']);
+  // 🔥 delete from Hive
+  service.box.delete(item['key']);
 
-                          final messenger = ScaffoldMessenger.of(context);
-                          messenger.clearSnackBars();
+  final messenger = ScaffoldMessenger.of(context);
+  messenger.clearSnackBars();
 
-                          messenger.showSnackBar(
-                            SnackBar(
-                              duration: const Duration(seconds: 3),
-                                backgroundColor: Colors.orange,
-                                behavior: SnackBarBehavior.floating,
-                                margin: const EdgeInsets.all(12),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                content: const Text(
-                                  "Expense deleted",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              action: SnackBarAction(
-                                label: "UNDO",
-                                onPressed: () {
-                                  final newItem =
-                                      Map<String, dynamic>.from(deletedItem);
-                                  newItem.remove('key');
+  final controller = messenger.showSnackBar(
+    SnackBar(
+      duration: const Duration(seconds: 3),
+      behavior: SnackBarBehavior.floating,
+      margin: const EdgeInsets.all(12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      backgroundColor: Colors.orange,
+      content: const Text(
+        "Expense deleted",
+        style: TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      action: SnackBarAction(
+        label: "UNDO",
+        textColor: Colors.white,
+        onPressed: () {
+          // 🔹 Add deleted item back
+          final newItem = Map<String, dynamic>.from(deletedItem);
+          newItem.remove('key'); // avoid duplicate key
+          service.addExpenseWithKey(deletedItem['key'], newItem);
+        },
+      ),
+    ),
+  );
 
-                                  service.addExpenseWithKey(deletedItem['key'], newItem);
-                                },
-                              ),
-                            ),
-                          );
-                        },
+  // 🔹 Force dismiss after 3 sec
+  Future.delayed(const Duration(seconds: 3), () {
+    controller.close();
+  });
+},
 
                         background: Container(
                           decoration: BoxDecoration(

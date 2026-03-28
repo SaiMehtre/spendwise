@@ -50,12 +50,8 @@ class AnalyticsScreen extends StatelessWidget {
             double amount = e['amount'];
             total += amount;
 
-            if (categoryMap.containsKey(e['category'])) {
-              categoryMap[e['category']] =
-                  categoryMap[e['category']]! + amount;
-            } else {
-              categoryMap[e['category']] = amount;
-            }
+            categoryMap[e['category']] =
+            (categoryMap[e['category']] ?? 0) + amount;
           }
 
           String topCategory = "";
@@ -71,6 +67,9 @@ class AnalyticsScreen extends StatelessWidget {
           if (categoryMap.isEmpty) {
             topCategory = "No Data";
           }
+
+          // top category 
+          double percent = total == 0 ? 0 : (max / total) * 100;
 
           return Container(
             decoration: const BoxDecoration(
@@ -90,7 +89,7 @@ class AnalyticsScreen extends StatelessWidget {
                 children: [
                   buildTopCard(total),
                   const SizedBox(height: 8),
-                  buildTopCategoryCard(topCategory, max),
+                  buildTopCategoryCard(topCategory, max, percent),
                   const SizedBox(height: 8),
                   buildPieChart(categoryMap),
                   const SizedBox(height: 8),
@@ -163,7 +162,8 @@ class AnalyticsScreen extends StatelessWidget {
     );
   }
 
-  Widget buildTopCategoryCard(String category, double amount) {
+  Widget buildTopCategoryCard(String category, double amount, double percent) {
+    
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
       child: BackdropFilter(
@@ -190,28 +190,50 @@ class AnalyticsScreen extends StatelessWidget {
           ),
           child: Row(
             children: [
+              Icon(Icons.star, color: Colors.white70, size: 16),
+              SizedBox(width: 2),
               const Text(
                 "Top Category",
                 style: TextStyle(color: Colors.white70,fontWeight: FontWeight.bold),
               ),
               const Spacer(),
-              Flexible(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+              // Expanded(
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      category,
-                      maxLines: 1,
+                      category == "No Data"
+                          ? "No Data"
+                          : "$category (${percent.toStringAsFixed(1)}%)",
+                      textAlign: TextAlign.end,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold),
+                      maxLines: 1,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
+
+                    const SizedBox(height: 4),
+
                     Text(
-                      NumberFormat.currency(locale: 'en_IN', symbol: '₹',decimalDigits: 2,).format(amount),
-                      style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold),
+                      NumberFormat.currency(
+                        locale: 'en_IN',
+                        symbol: '₹',
+                        decimalDigits: 2,
+                      ).format(amount),
+                      textAlign: TextAlign.end,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      style: const TextStyle(
+                        color: Colors.greenAccent,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
-                ),
-              )
+                )
+              // ),
             ],
           ),
         ),
@@ -254,7 +276,11 @@ class AnalyticsScreen extends StatelessWidget {
                     const SizedBox(width: 8),
                     FittedBox(
                       child: Text(
-                        "₹${entry.value.toStringAsFixed(2)}",
+                          NumberFormat.currency(
+                          locale: 'en_IN',
+                          symbol: '₹',
+                          decimalDigits: 2,
+                        ).format(entry.value),
                         style: const TextStyle(
                             fontWeight: FontWeight.bold, color: Colors.white),
                       ),
@@ -364,7 +390,11 @@ class AnalyticsScreen extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          "₹${value.toStringAsFixed(2)} (${percent.toStringAsFixed(1)}%)",
+                          "${NumberFormat.currency(
+                            locale: 'en_IN',
+                            symbol: '₹',
+                            decimalDigits: 2,
+                          ).format(value)} (${percent.toStringAsFixed(1)}%)",
                           style: const TextStyle(
                             fontWeight: FontWeight.w500,
                             color: Colors.white,

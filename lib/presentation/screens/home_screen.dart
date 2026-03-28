@@ -659,40 +659,46 @@ class HomeContent extends StatefulWidget  {
                           },
 
                           onDismissed: (direction) {
-                            final deletedItem = Map<String, dynamic>.from(item);
-                            final deletedKey = item['key'];
+  final deletedItem = Map<String, dynamic>.from(item);
+  final deletedKey = item['key'];
 
-                            widget.service.deleteExpense(deletedKey);
+  final messenger = ScaffoldMessenger.of(context);
 
-                            final messenger = ScaffoldMessenger.of(context);
-                            messenger.clearSnackBars();
+  widget.service.deleteExpense(deletedKey);
 
-                            messenger.showSnackBar(
-                              SnackBar(
-                                duration: const Duration(seconds: 3),
-                                backgroundColor: Colors.orange,
-                                behavior: SnackBarBehavior.floating,
-                                margin: const EdgeInsets.all(12),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                content: const Text(
-                                  "Expense deleted",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                action: SnackBarAction(
-                                  label: "UNDO",
-                                  textColor: Colors.white,
-                                  onPressed: () {
-                                    widget.service.addExpenseWithKey(deletedKey, deletedItem); // 🔥 FIXED
-                                  },
-                                ),
-                              ),
-                            );
-                          },
+  messenger.clearSnackBars();
+
+  final controller = messenger.showSnackBar(
+    SnackBar(
+      duration: const Duration(seconds: 3),
+      behavior: SnackBarBehavior.floating,
+      margin: const EdgeInsets.all(12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      backgroundColor: Colors.orange,
+      content: const Text(
+        "Expense deleted",
+        style: TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      action: SnackBarAction(
+        label: "UNDO",
+        textColor: Colors.white,
+        onPressed: () {
+          widget.service.addExpenseWithKey(deletedKey, deletedItem);
+        },
+      ),
+    ),
+  );
+
+  // 🔥 FORCE DISMISS AFTER 3 SEC
+  Future.delayed(const Duration(seconds: 3), () {
+    controller.close(); // 👈 THIS IS KEY
+  });
+},
 
                           background: Container(
                             decoration: BoxDecoration(
