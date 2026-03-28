@@ -43,35 +43,50 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return total;
   }
+
+  bool isBetween(DateTime date, DateTime start, DateTime end) {
+    return (date.isAtSameMomentAs(start) || date.isAfter(start)) &&
+          date.isBefore(end);
+  }
+
   // Today Spend
   double getTodayExpense() {
     final now = DateTime.now();
 
+    final start = DateTime(now.year, now.month, now.day);
+    final end = start.add(const Duration(days: 1));
+
     return expenses.where((e) {
-      final date = DateTime.parse(e['date']);
-      return date.day == now.day &&
-          date.month == now.month &&
-          date.year == now.year;
+      final d = DateTime.parse(e['date']);
+      return isBetween(d, start, end);
     }).fold(0, (sum, e) => sum + e['amount']);
   }
 
   // Weekly spend
   double getWeeklyExpense() {
     final now = DateTime.now();
-    final weekStart = now.subtract(Duration(days: now.weekday - 1));
+
+    final start = DateTime(now.year, now.month, now.day)
+        .subtract(Duration(days: now.weekday - 1));
+
+    final end = start.add(const Duration(days: 7));
 
     return expenses.where((e) {
-      final date = DateTime.parse(e['date']);
-      return date.isAfter(weekStart);
+      final d = DateTime.parse(e['date']);
+      return isBetween(d, start, end);
     }).fold(0, (sum, e) => sum + e['amount']);
   }
+
   // Monthly Spend
   double getMonthlyExpense() {
     final now = DateTime.now();
 
+    final start = DateTime(now.year, now.month, 1);
+    final end = DateTime(now.year, now.month + 1, 1);
+
     return expenses.where((e) {
-      final date = DateTime.parse(e['date']);
-      return date.month == now.month && date.year == now.year;
+      final d = DateTime.parse(e['date']);
+      return isBetween(d, start, end);
     }).fold(0, (sum, e) => sum + e['amount']);
   }
 
@@ -79,9 +94,12 @@ class _HomeScreenState extends State<HomeScreen> {
   double getYearlyExpense() {
     final now = DateTime.now();
 
+    final start = DateTime(now.year, 1, 1);
+    final end = DateTime(now.year + 1, 1, 1);
+
     return expenses.where((e) {
-      final date = DateTime.parse(e['date']);
-      return date.year == now.year;
+      final d = DateTime.parse(e['date']);
+      return isBetween(d, start, end);
     }).fold(0, (sum, e) => sum + e['amount']);
   }
 
@@ -121,27 +139,41 @@ class _HomeScreenState extends State<HomeScreen> {
 
         final now = DateTime.now();
 
+        // Today
+        final todayStart = DateTime(now.year, now.month, now.day);
+        final todayEnd = todayStart.add(const Duration(days: 1));
+
+        // Week
+        final weekStart = DateTime(now.year, now.month, now.day)
+            .subtract(Duration(days: now.weekday - 1));
+        final weekEnd = weekStart.add(const Duration(days: 7));
+
+        // Month
+        final monthStart = DateTime(now.year, now.month, 1);
+        final monthEnd = DateTime(now.year, now.month + 1, 1);
+
+        // Year
+        final yearStart = DateTime(now.year, 1, 1);
+        final yearEnd = DateTime(now.year + 1, 1, 1);
+
         final today = expenses.where((e) {
           final d = DateTime.parse(e['date']);
-          return d.day == now.day &&
-              d.month == now.month &&
-              d.year == now.year;
+          return isBetween(d, todayStart, todayEnd);
         }).toList();
 
-        final weekStart = now.subtract(Duration(days: now.weekday - 1));
         final week = expenses.where((e) {
           final d = DateTime.parse(e['date']);
-          return d.isAfter(weekStart);
+          return isBetween(d, weekStart, weekEnd);
         }).toList();
 
         final month = expenses.where((e) {
           final d = DateTime.parse(e['date']);
-          return d.month == now.month && d.year == now.year;
+          return isBetween(d, monthStart, monthEnd);
         }).toList();
 
         final year = expenses.where((e) {
           final d = DateTime.parse(e['date']);
-          return d.year == now.year;
+          return isBetween(d, yearStart, yearEnd);
         }).toList();
 
         return Padding(
@@ -264,6 +296,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     List<Widget> screens = [
       HomeContent(
+        key: const ValueKey("home"),
         expenses: expenses,
         service: service,
         loadExpenses: loadExpenses,
@@ -273,8 +306,8 @@ class _HomeScreenState extends State<HomeScreen> {
           setState(() => selectedIndex = index);
         },
       ),
-      AnalyticsScreen(),
-      HistoryScreen(),
+      AnalyticsScreen(key: const ValueKey("analytics")),
+      HistoryScreen(key: const ValueKey("history")),
     ];
 
     final Map<int, String> screenTitles = {
@@ -298,10 +331,22 @@ class _HomeScreenState extends State<HomeScreen> {
             end: Alignment.bottomCenter,
           ),
         ),
-        child: IndexedStack(
-          index: selectedIndex,
-          children: screens,
-        ),
+        child: AnimatedSwitcher(
+  duration: const Duration(milliseconds: 400),
+  transitionBuilder: (child, animation) {
+    return FadeTransition(
+      opacity: animation,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0.1, 0),
+          end: Offset.zero,
+        ).animate(animation),
+        child: child,
+      ),
+    );
+  },
+  child: screens[selectedIndex],
+),
       ),
       
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -316,6 +361,7 @@ class _HomeScreenState extends State<HomeScreen> {
           );
 
           if (result != null && result['success'] == true) {
+            loadExpenses();
             final isUpdate = result['isUpdate'] == true;
 
             ScaffoldMessenger.of(context).showSnackBar(
@@ -347,7 +393,7 @@ class _HomeScreenState extends State<HomeScreen> {
               centerTitle: true,
               title: Text(
                 screenTitles[selectedIndex] ?? "App",
-                style: const TextStyle(color: Colors.black),
+                style: const TextStyle(color: Colors.white),
               ),
             ),
           ),
@@ -410,7 +456,7 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 
-class HomeContent extends StatelessWidget {
+class HomeContent extends StatefulWidget  {
   final List<Map<String, dynamic>> expenses;
   final ExpenseService service;
   final VoidCallback loadExpenses;
@@ -429,19 +475,47 @@ class HomeContent extends StatelessWidget {
   });
 
   @override
+  State<HomeContent> createState() => _HomeContentState();
+
+}
+
+  class _HomeContentState extends State<HomeContent> {
+  final ScrollController _scrollController = ScrollController();
+  bool showButton = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _scrollController.addListener(() {
+      if (_scrollController.offset > 200 && !showButton) {
+        setState(() => showButton = true);
+      } else if (_scrollController.offset <= 200 && showButton) {
+        setState(() => showButton = false);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Column(
             children: [
               const SizedBox(height: 8),
 
-              buildDashboardCards(),
+              widget.buildDashboardCards(),
 
               const SizedBox(height: 6),
 
                // 🔥 IMPORTANT PART
               Expanded(
                 child: ValueListenableBuilder(
-                  valueListenable: service.box.listenable(),
+                  valueListenable: widget.service.box.listenable(),
                   builder: (context, box, _) {
 
                     final expenses = box.keys.map((key) {
@@ -467,48 +541,57 @@ class HomeContent extends StatelessWidget {
                     final recentExpenses = expenses.take(10).toList();
 
                     return ListView.builder(
+                      controller: _scrollController,
                       itemCount: recentExpenses.length + 1,
                       padding: const EdgeInsets.only(bottom: 80),
                       itemBuilder: (context, index) {
 
                         // 🔥 LAST ITEM = BUTTON
                         if (index == recentExpenses.length) {
-                          return Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 10, 16, 100), // 👈 bottom safe space
-                            child: GestureDetector(
-                              onTap: () {
-                                onTabChange(2); // 🔥 history tab
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(14),
-                                  gradient: const LinearGradient(
-                                    colors: [
-                                      Color(0xFF6A11CB),
-                                      Color(0xFF2575FC),
-                                    ],
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.deepPurple.withOpacity(0.4),
-                                      blurRadius: 10,
-                                    ),
-                                  ],
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: const [
-                                    Text(
-                                      "View All Expenses",
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
+                          return AnimatedOpacity(
+                            duration: const Duration(milliseconds: 500),
+                            opacity: showButton ? 1 : 0,
+                            child: AnimatedSlide(
+                              duration: const Duration(milliseconds: 400),
+                              offset: showButton ? Offset.zero : const Offset(0, 0.3),
+                              child: Padding(
+                                padding: const EdgeInsets.fromLTRB(16, 10, 16, 120),
+                                child: GestureDetector(
+                                  onTap: () {
+                                    widget.onTabChange(2);
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(vertical: 14),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(14),
+                                      gradient: const LinearGradient(
+                                        colors: [
+                                          Color(0xFF6A11CB),
+                                          Color(0xFF2575FC),
+                                        ],
                                       ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.deepPurple.withOpacity(0.4),
+                                          blurRadius: 10,
+                                        ),
+                                      ],
                                     ),
-                                    SizedBox(width: 8),
-                                    Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
-                                  ],
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: const [
+                                        Text(
+                                          "View All Expenses",
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        SizedBox(width: 8),
+                                        Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
+                                      ],
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
@@ -579,7 +662,7 @@ class HomeContent extends StatelessWidget {
                             final deletedItem = Map<String, dynamic>.from(item);
                             final deletedKey = item['key'];
 
-                            service.deleteExpense(deletedKey);
+                            widget.service.deleteExpense(deletedKey);
 
                             final messenger = ScaffoldMessenger.of(context);
                             messenger.clearSnackBars();
@@ -604,7 +687,7 @@ class HomeContent extends StatelessWidget {
                                   label: "UNDO",
                                   textColor: Colors.white,
                                   onPressed: () {
-                                    service.addExpenseWithKey(deletedKey, deletedItem); // 🔥 FIXED
+                                    widget.service.addExpenseWithKey(deletedKey, deletedItem); // 🔥 FIXED
                                   },
                                 ),
                               ),
@@ -647,7 +730,7 @@ class HomeContent extends StatelessWidget {
                           child: ExpenseCard(
                             item: item,
                             color: getCategoryColor(item['category']),
-                            formatDate: formatDate,
+                            formatDate: widget.formatDate,
                           ),
                         );
                       },
@@ -660,6 +743,8 @@ class HomeContent extends StatelessWidget {
     ); // 👈 pura jo body me tha
   }
 }
+
+
 
 
   // Category icons 
