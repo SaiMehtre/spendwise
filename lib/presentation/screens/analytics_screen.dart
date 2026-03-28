@@ -4,6 +4,7 @@ import '../../data/services/expense_service.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../core/utils/category_utils.dart';
 import 'package:intl/intl.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class AnalyticsScreen extends StatelessWidget {
   AnalyticsScreen({super.key});
@@ -16,62 +17,89 @@ class AnalyticsScreen extends StatelessWidget {
     Colors.orange,
     Colors.purple,
   ];
+  
 
   @override
   Widget build(BuildContext context) {
-    final expenses = service.getExpenses();
-
-    double total = 0;
-    Map<String, double> categoryMap = {};
-
-    for (var e in expenses) {
-      double amount = e['amount'];
-      total += amount;
-      if (categoryMap.containsKey(e['category'])) {
-        categoryMap[e['category']] = categoryMap[e['category']]! + amount;
-      } else {
-        categoryMap[e['category']] = amount;
-      }
-    }
-
-    String topCategory = "";
-    double max = 0;
-    categoryMap.forEach((key, value) {
-      if (value > max) {
-        max = value;
-        topCategory = key;
-      }
-    });
-
-    return Scaffold(
+  return Scaffold(
       backgroundColor: Colors.transparent,
       extendBody: true,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color(0xFF0f2027),
-              Color(0xFF203a43),
-              Color(0xFF2c5364),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-          child: Column(
-            children: [
-              buildTopCard(total),
-              const SizedBox(height: 8),
-              buildTopCategoryCard(topCategory, max),
-              const SizedBox(height: 8),
-              buildPieChart(categoryMap),
-              const SizedBox(height: 8),
-              buildCategoryBreakdown(categoryMap),
-            ],
-          ),
-        ),
+
+      body: ValueListenableBuilder(
+        valueListenable: service.box.listenable(),
+        builder: (context, box, _) {
+
+          final expenses = box.keys.map((key) {
+            final item = Map<String, dynamic>.from(box.get(key));
+            item['key'] = key;
+            return item;
+          }).toList();
+
+          // 🟡 DATE FILTER (MONTH)
+          final now = DateTime.now();
+
+          final filteredExpenses = expenses.where((e) {
+            final d = DateTime.parse(e['date']);
+            return d.month == now.month && d.year == now.year;
+          }).toList();
+
+          double total = 0;
+          Map<String, double> categoryMap = {};
+
+          for (var e in filteredExpenses) {
+            double amount = e['amount'];
+            total += amount;
+
+            if (categoryMap.containsKey(e['category'])) {
+              categoryMap[e['category']] =
+                  categoryMap[e['category']]! + amount;
+            } else {
+              categoryMap[e['category']] = amount;
+            }
+          }
+
+          String topCategory = "";
+          double max = 0;
+
+          categoryMap.forEach((key, value) {
+            if (value > max) {
+              max = value;
+              topCategory = key;
+            }
+          });
+
+          if (categoryMap.isEmpty) {
+            topCategory = "No Data";
+          }
+
+          return Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color(0xFF0f2027),
+                  Color(0xFF203a43),
+                  Color(0xFF2c5364),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+              child: Column(
+                children: [
+                  buildTopCard(total),
+                  const SizedBox(height: 8),
+                  buildTopCategoryCard(topCategory, max),
+                  const SizedBox(height: 8),
+                  buildPieChart(categoryMap),
+                  const SizedBox(height: 8),
+                  buildCategoryBreakdown(categoryMap),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -178,7 +206,7 @@ class AnalyticsScreen extends StatelessWidget {
                       style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold),
                     ),
                     Text(
-                      "₹${amount.toStringAsFixed(2)}",
+                      NumberFormat.currency(locale: 'en_IN', symbol: '₹',decimalDigits: 2,).format(amount),
                       style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold),
                     ),
                   ],
@@ -192,11 +220,14 @@ class AnalyticsScreen extends StatelessWidget {
   }
 
   Widget buildCategoryBreakdown(Map<String, double> data) {
-  return SingleChildScrollView(
-    child: Padding(
+    final sorted = data.entries.toList()
+  ..sort((a, b) => b.value.compareTo(a.value));
+
+  return Padding(
       padding: const EdgeInsets.fromLTRB(6, 6, 6, 90), // bottom 90 extra
+      
       child: Column(
-        children: data.entries.map((entry) {
+        children: sorted.map((entry){
           return ClipRRect(
             borderRadius: BorderRadius.circular(16),
             child: BackdropFilter(
@@ -235,12 +266,13 @@ class AnalyticsScreen extends StatelessWidget {
           );
         }).toList(),
       ),
-    ),
-  );
+    );
 }
 
   List<PieChartSectionData> buildPieSections(Map<String, double> data) {
     double total = data.values.fold(0, (sum, val) => sum + val);
+    final sorted = data.entries.toList()
+  ..sort((a, b) => b.value.compareTo(a.value));
 
     // 👇 EMPTY DATA CASE
     if (total == 0) {
@@ -259,7 +291,7 @@ class AnalyticsScreen extends StatelessWidget {
       ];
     }
 
-    return data.entries.map((entry) {
+    return sorted.map((entry) {
       final percent = (entry.value / total) * 100;
 
       return PieChartSectionData(
@@ -306,6 +338,7 @@ class AnalyticsScreen extends StatelessWidget {
                     sectionsSpace: 2,
                     centerSpaceRadius: 40,
                   ),
+                  swapAnimationDuration: Duration(milliseconds: 500),
                 ),
               ),
               const SizedBox(height: 20),
