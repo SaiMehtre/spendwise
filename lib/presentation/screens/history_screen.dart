@@ -22,6 +22,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
   String selectedCategory = 'All';
   DateTime? selectedMonth;
 
+  DateTime? startDate;
+  DateTime? endDate;
+
   String formatDate(DateTime date) {
     return DateFormat('dd MMM yyyy • hh:mm a').format(date);
   }
@@ -54,35 +57,35 @@ class _HistoryScreenState extends State<HistoryScreen> {
               },
               selectedCategory: selectedCategory,
               selectedMonth: selectedMonth,
+
               onCategoryChanged: (val) {
                 setState(() => selectedCategory = val);
               },
+
               onMonthChanged: (val) {
-                setState(() {
-                  selectedMonth = val;
-                  startDate = null;
-                  endDate = null;
-                });
-              },
-              onStartDateChanged: (val) {
-                setState(() {
-                  startDate = val;
-                  selectedMonth = null;
-                });
+                setState(() => selectedMonth = val);
               },
 
-              onEndDateChanged: (val) {
-                setState(() {
-                  endDate = val;
-                  selectedMonth = null;
-                });
-              },
               onClear: () {
                 setState(() {
                   searchQuery = '';
                   selectedCategory = 'All';
                   selectedMonth = null;
+                  startDate = null;
+                  endDate = null;
                 });
+              },
+
+              // 🔥 NEW ADDITIONS
+              startDate: startDate,
+              endDate: endDate,
+
+              onStartDateChanged: (val) {
+                setState(() => startDate = val);
+              },
+
+              onEndDateChanged: (val) {
+                setState(() => endDate = val);
               },
             ),
 

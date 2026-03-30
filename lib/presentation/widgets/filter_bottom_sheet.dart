@@ -64,6 +64,7 @@ class FilterBottomSheet extends StatelessWidget {
                 .toList(),
             onChanged: (value) {
               onCategoryChanged(value!);
+              Navigator.pop(context); // 🔥 CLOSE sheet
             },
           ),
 
@@ -97,6 +98,7 @@ class FilterBottomSheet extends StatelessWidget {
                   final month = monthMap[value]!;
                   onMonthChanged(DateTime(DateTime.now().year, month));
                 }
+                Navigator.pop(context);
               }
             },
           ),
@@ -114,9 +116,16 @@ class FilterBottomSheet extends StatelessWidget {
               if (pickedRange != null) {
                 onStartDateChanged?.call(pickedRange.start);
                 onEndDateChanged?.call(pickedRange.end);
+                Navigator.pop(context);
               }
             },
-            child: const Text("Select Date Range"),
+            child: Text(
+              startDate != null && endDate != null
+                  ? (startDate == endDate
+                      ? "Selected: ${startDate!.day}/${startDate!.month}/${startDate!.year}"
+                      : "${startDate!.day}/${startDate!.month} - ${endDate!.day}/${endDate!.month}")
+                  : "Select Date / Range",
+            ),
           ),
 
 

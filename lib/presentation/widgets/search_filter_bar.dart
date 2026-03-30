@@ -8,6 +8,10 @@ class SearchFilterBar extends StatelessWidget {
   final Function(String) onCategoryChanged;
   final Function(DateTime?) onMonthChanged;
   final VoidCallback onClear;
+  final DateTime? startDate;
+  final DateTime? endDate;
+  final Function(DateTime?) onStartDateChanged;
+  final Function(DateTime?) onEndDateChanged;
 
   const SearchFilterBar({
     super.key,
@@ -17,6 +21,10 @@ class SearchFilterBar extends StatelessWidget {
     required this.onCategoryChanged,
     required this.onMonthChanged,
     required this.onClear,
+    required this.startDate,
+    required this.endDate,
+    required this.onStartDateChanged,
+    required this.onEndDateChanged,
   });
 
   @override
@@ -46,9 +54,42 @@ class SearchFilterBar extends StatelessWidget {
               builder: (_) => FilterBottomSheet(
                 selectedCategory: selectedCategory,
                 selectedMonth: selectedMonth,
+
                 onCategoryChanged: onCategoryChanged,
-                onMonthChanged: onMonthChanged,
-                onClear: onClear,
+
+                onMonthChanged: (val) {
+                  onMonthChanged(val);
+
+                  // 👉 month select hua to range reset
+                  onStartDateChanged(null);
+                  onEndDateChanged(null);
+                },
+
+                onClear: () {
+                  onClear();
+
+                  // 👉 clear me sab reset
+                  onStartDateChanged(null);
+                  onEndDateChanged(null);
+                },
+
+                // 🔥 NEW PARAMETERS (IMPORTANT)
+                startDate: startDate,
+                endDate: endDate,
+
+                onStartDateChanged: (val) {
+                  onStartDateChanged(val);
+
+                  // 👉 range select hua to month reset
+                  onMonthChanged(null);
+                },
+
+                onEndDateChanged: (val) {
+                  onEndDateChanged(val);
+
+                  // 👉 range select hua to month reset
+                  onMonthChanged(null);
+                },
               ),
             );
           },
