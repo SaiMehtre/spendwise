@@ -45,7 +45,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         child: Column(
           children: [
             const SizedBox(height: 8),
-
+            
             SearchFilterBar(
               onSearch: (value) {
                 setState(() {
@@ -82,11 +82,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
                   final filteredExpenses = expenses.where((e) {
                     final matchesSearch =
-                        e.note.toLowerCase().contains(searchQuery) ||
-                        e.category.toLowerCase().contains(searchQuery);
+                        e.note.toLowerCase().contains(searchQuery.toLowerCase()) ||
+                        e.category.toLowerCase().contains(searchQuery.toLowerCase());
 
                     final matchesCategory =
-                        selectedCategory == 'All' || e.category == selectedCategory;
+                        selectedCategory == 'All' ||
+                        e.category.toLowerCase() == selectedCategory.toLowerCase();
 
                     final matchesMonth = selectedMonth == null ||
                         (e.date.month == selectedMonth!.month &&
@@ -95,6 +96,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     return matchesSearch && matchesCategory && matchesMonth;
                   }).toList();
 
+                  
                   if (expenses.isEmpty) {
                     return Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -109,11 +111,21 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     );
                   }
 
+                  if (filteredExpenses.isEmpty) {
+                    return const Center(
+                      child: Text(
+                        "No matching results",
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    );
+                  }
+
+
                   return ListView.builder(
                     padding: const EdgeInsets.only(bottom: 80),
-                    itemCount: expenses.length,
+                    itemCount: filteredExpenses.length,
                     itemBuilder: (context, index) {
-                      final item = expenses[index];
+                      final item = filteredExpenses[index];
 
                       return Dismissible(
                         key: ValueKey(item.id),
