@@ -58,7 +58,24 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 setState(() => selectedCategory = val);
               },
               onMonthChanged: (val) {
-                setState(() => selectedMonth = val);
+                setState(() {
+                  selectedMonth = val;
+                  startDate = null;
+                  endDate = null;
+                });
+              },
+              onStartDateChanged: (val) {
+                setState(() {
+                  startDate = val;
+                  selectedMonth = null;
+                });
+              },
+
+              onEndDateChanged: (val) {
+                setState(() {
+                  endDate = val;
+                  selectedMonth = null;
+                });
               },
               onClear: () {
                 setState(() {
@@ -89,11 +106,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         selectedCategory == 'All' ||
                         e.category.toLowerCase() == selectedCategory.toLowerCase();
 
-                    final matchesMonth = selectedMonth == null ||
-                        (e.date.month == selectedMonth!.month &&
-                        e.date.year == selectedMonth!.year);
+                   final matchesMonth = selectedMonth == null ||
+                        (e.date.year == selectedMonth!.year &&
+                        e.date.month == selectedMonth!.month);
 
-                    return matchesSearch && matchesCategory && matchesMonth;
+                  final matchesRange = (startDate == null && endDate == null) ||
+                        (e.date.isAfter(startDate ?? DateTime(2000)) &&
+                        e.date.isBefore(endDate ?? DateTime.now().add(const Duration(days: 1))));
+
+                    return matchesSearch &&
+                            matchesCategory &&
+                            matchesMonth &&
+                            matchesRange;
                   }).toList();
 
                   

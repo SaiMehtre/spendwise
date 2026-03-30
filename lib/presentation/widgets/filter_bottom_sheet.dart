@@ -1,11 +1,21 @@
 import 'package:flutter/material.dart';
 
+const List<String> months = [
+  'All',
+  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+];
+
 class FilterBottomSheet extends StatelessWidget {
   final String selectedCategory;
   final DateTime? selectedMonth;
   final Function(String) onCategoryChanged;
   final Function(DateTime?) onMonthChanged;
   final VoidCallback onClear;
+  final DateTime? startDate;
+  final DateTime? endDate;
+  final Function(DateTime?)? onStartDateChanged;
+  final Function(DateTime?)? onEndDateChanged;
 
   const FilterBottomSheet({
     super.key,
@@ -14,10 +24,17 @@ class FilterBottomSheet extends StatelessWidget {
     required this.onCategoryChanged,
     required this.onMonthChanged,
     required this.onClear,
+    required this.startDate,
+    required this.endDate,
+    required this.onStartDateChanged,
+    required this.onEndDateChanged,
   });
 
   @override
   Widget build(BuildContext context) {
+    String selectedMonthLabel = selectedMonth == null
+              ? 'All'
+              : months[selectedMonth!.month];
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -52,23 +69,56 @@ class FilterBottomSheet extends StatelessWidget {
 
           const SizedBox(height: 12),
 
+          
+
+          DropdownButton<String>(
+            value: selectedMonthLabel,
+            dropdownColor: Colors.black,
+            isExpanded: true,
+            items: months.map((m) {
+              return DropdownMenuItem(
+                value: m,
+                child: Text(m, style: const TextStyle(color: Colors.white)),
+              );
+            }).toList(),
+            onChanged: (value) {
+              if (value == 'All') {
+                onMonthChanged(null);
+              } else {
+                final monthMap = {
+                  'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4,
+                  'May': 5, 'Jun': 6, 'Jul': 7, 'Aug': 8,
+                  'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12,
+                };
+
+                if (value == 'All') {
+                  onMonthChanged(null);
+                } else {
+                  final month = monthMap[value]!;
+                  onMonthChanged(DateTime(DateTime.now().year, month));
+                }
+              }
+            },
+          ),
+
+          const SizedBox(height: 12),
+
           ElevatedButton(
             onPressed: () async {
-              final picked = await showDatePicker(
+              final pickedRange = await showDateRangePicker(
                 context: context,
-                initialDate: DateTime.now(),
                 firstDate: DateTime(2020),
                 lastDate: DateTime.now(),
               );
 
-              if (picked != null) {
-                onMonthChanged(picked);
+              if (pickedRange != null) {
+                onStartDateChanged?.call(pickedRange.start);
+                onEndDateChanged?.call(pickedRange.end);
               }
             },
-            child: const Text("Select Month"),
+            child: const Text("Select Date Range"),
           ),
 
-          const SizedBox(height: 12),
 
           TextButton(
             onPressed: () {
