@@ -105,6 +105,52 @@ class FilterBottomSheet extends StatelessWidget {
 
           const SizedBox(height: 12),
 
+          // ElevatedButton(
+          //   onPressed: () async {
+          //     final pickedRange = await showDateRangePicker(
+          //       context: context,
+          //       firstDate: DateTime(2020),
+          //       lastDate: DateTime.now(),
+          //     );
+
+          //     if (pickedRange != null) {
+          //       onStartDateChanged?.call(pickedRange.start);
+          //       onEndDateChanged?.call(pickedRange.end);
+          //       Navigator.pop(context);
+          //     }
+          //   },
+          //   child: Text(
+          //     startDate != null && endDate != null
+          //         ? (startDate == endDate
+          //             ? "Selected: ${startDate!.day}/${startDate!.month}/${startDate!.year}"
+          //             : "${startDate!.day}/${startDate!.month} - ${endDate!.day}/${endDate!.month}")
+          //         : "Select Date / Range",
+          //   ),
+          // ),
+
+          // 🔥 SINGLE DATE BUTTON
+          ElevatedButton(
+            onPressed: () async {
+              final picked = await showDatePicker(
+                context: context,
+                initialDate: DateTime.now(),
+                firstDate: DateTime(2020),
+                lastDate: DateTime.now(),
+              );
+
+              if (picked != null) {
+                onStartDateChanged?.call(picked);
+                onEndDateChanged?.call(picked);
+
+                Navigator.pop(context); // 🔥 close
+              }
+            },
+            child: const Text("Select Single Date"),
+          ),
+
+          const SizedBox(height: 10),
+
+          // 🔥 RANGE BUTTON
           ElevatedButton(
             onPressed: () async {
               final pickedRange = await showDateRangePicker(
@@ -116,16 +162,11 @@ class FilterBottomSheet extends StatelessWidget {
               if (pickedRange != null) {
                 onStartDateChanged?.call(pickedRange.start);
                 onEndDateChanged?.call(pickedRange.end);
-                Navigator.pop(context);
+
+                Navigator.pop(context); // 🔥 close
               }
             },
-            child: Text(
-              startDate != null && endDate != null
-                  ? (startDate == endDate
-                      ? "Selected: ${startDate!.day}/${startDate!.month}/${startDate!.year}"
-                      : "${startDate!.day}/${startDate!.month} - ${endDate!.day}/${endDate!.month}")
-                  : "Select Date / Range",
-            ),
+            child: const Text("Select Date Range"),
           ),
 
 

@@ -89,6 +89,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
               },
             ),
 
+            const SizedBox(height: 8),
+
             Expanded(
               child: ValueListenableBuilder(
                 valueListenable: service.box.listenable(),
@@ -114,8 +116,20 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         e.date.month == selectedMonth!.month);
 
                   final matchesRange = (startDate == null && endDate == null) ||
-                        (e.date.isAfter(startDate ?? DateTime(2000)) &&
-                        e.date.isBefore(endDate ?? DateTime.now().add(const Duration(days: 1))));
+
+                    // 🔥 SINGLE DATE CASE
+                    (startDate != null && endDate != null && startDate == endDate
+                      ? (e.date.year == startDate!.year &&
+                        e.date.month == startDate!.month &&
+                        e.date.day == startDate!.day)
+
+                      // 🔥 RANGE CASE (INCLUSIVE)
+                      : (startDate != null && endDate != null
+                          ? (e.date.isAfter(startDate!.subtract(const Duration(days: 1))) &&
+                            e.date.isBefore(endDate!.add(const Duration(days: 1))))
+                          : true
+                        )
+                    );
 
                     return matchesSearch &&
                             matchesCategory &&
