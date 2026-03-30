@@ -7,6 +7,9 @@ import '../../core/utils/category_utils.dart';
 import 'dart:ui';
 import 'history_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import '../widgets/expense_card.dart';
+import '../../data/models/expense_model.dart';
+import '../../core/utils/expense_utils.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,8 +19,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  List<Expense> expenses = [];
   final service = ExpenseService();
-  List<Map<String, dynamic>> expenses = [];
   int selectedIndex = 0;
 
   @override
@@ -27,10 +30,17 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void loadExpenses() {
+    final box = service.box;
+
+    final data = box.keys.map((key) {
+      final map = Map<String, dynamic>.from(box.get(key));
+      return Expense.fromMap(map, key);
+    }).toList();
+
+    data.sort((a, b) => b.date.compareTo(a.date));
+
     setState(() {
-      expenses = service.getExpenses()
-      ..sort((a, b) => DateTime.parse(b['date'])
-          .compareTo(DateTime.parse(a['date'])));
+      expenses = data;
     });
   }
 
@@ -38,7 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
     double total = 0;
 
     for (var item in expenses) {
-      total += item['amount'];
+      total += item.amount;
     }
 
     return total;
@@ -48,61 +58,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return (date.isAtSameMomentAs(start) || date.isAfter(start)) &&
           date.isBefore(end);
   }
-
-  // Today Spend
-  double getTodayExpense() {
-    final now = DateTime.now();
-
-    final start = DateTime(now.year, now.month, now.day);
-    final end = start.add(const Duration(days: 1));
-
-    return expenses.where((e) {
-      final d = DateTime.parse(e['date']);
-      return isBetween(d, start, end);
-    }).fold(0, (sum, e) => sum + e['amount']);
-  }
-
-  // Weekly spend
-  double getWeeklyExpense() {
-    final now = DateTime.now();
-
-    final start = DateTime(now.year, now.month, now.day)
-        .subtract(Duration(days: now.weekday - 1));
-
-    final end = start.add(const Duration(days: 7));
-
-    return expenses.where((e) {
-      final d = DateTime.parse(e['date']);
-      return isBetween(d, start, end);
-    }).fold(0, (sum, e) => sum + e['amount']);
-  }
-
-  // Monthly Spend
-  double getMonthlyExpense() {
-    final now = DateTime.now();
-
-    final start = DateTime(now.year, now.month, 1);
-    final end = DateTime(now.year, now.month + 1, 1);
-
-    return expenses.where((e) {
-      final d = DateTime.parse(e['date']);
-      return isBetween(d, start, end);
-    }).fold(0, (sum, e) => sum + e['amount']);
-  }
-
-  // Yearly Spend
-  double getYearlyExpense() {
-    final now = DateTime.now();
-
-    final start = DateTime(now.year, 1, 1);
-    final end = DateTime(now.year + 1, 1, 1);
-
-    return expenses.where((e) {
-      final d = DateTime.parse(e['date']);
-      return isBetween(d, start, end);
-    }).fold(0, (sum, e) => sum + e['amount']);
-  }
-
   // Date format 
 
   String formatDate(String dateStr) {
@@ -112,12 +67,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // To EXpand Note Card
 
-  Widget buildExpenseCard(Map<String, dynamic> item) {
-    return ExpenseCard(
-      item: item,
-      color: getCategoryColor(item['category']),
-      formatDate: formatDate,
-    );
+  Widget buildExpenseCard(Expense item) {
+    return ExpenseCard(item: item);
   }
 
   // Dashboard Cards
@@ -128,13 +79,13 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (context, box, _) {
 
         final expenses = box.keys.map((key) {
-          final item = Map<String, dynamic>.from(box.get(key));
-          item['key'] = key;
-          return item;
-        }).toList();
+          final map = Map<String, dynamic>.from(box.get(key));
+          return Expense.fromMap(map, key);
+        }).toList()
+          ..sort((a, b) => b.date.compareTo(a.date));
 
-        double getTotal(List list) {
-          return list.fold(0, (sum, e) => sum + e['amount']);
+        double getTotal(List<Expense> list) {
+          return list.fold(0, (sum, e) => sum + e.amount);
         }
 
         final now = DateTime.now();
@@ -157,22 +108,22 @@ class _HomeScreenState extends State<HomeScreen> {
         final yearEnd = DateTime(now.year + 1, 1, 1);
 
         final today = expenses.where((e) {
-          final d = DateTime.parse(e['date']);
+          final d = e.date;
           return isBetween(d, todayStart, todayEnd);
         }).toList();
 
         final week = expenses.where((e) {
-          final d = DateTime.parse(e['date']);
+          final d = e.date;
           return isBetween(d, weekStart, weekEnd);
         }).toList();
 
         final month = expenses.where((e) {
-          final d = DateTime.parse(e['date']);
+          final d = e.date;
           return isBetween(d, monthStart, monthEnd);
         }).toList();
 
         final year = expenses.where((e) {
-          final d = DateTime.parse(e['date']);
+          final d = e.date;
           return isBetween(d, yearStart, yearEnd);
         }).toList();
 
@@ -457,7 +408,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
 
 class HomeContent extends StatefulWidget  {
-  final List<Map<String, dynamic>> expenses;
+  final List<Expense> expenses;
   final ExpenseService service;
   final VoidCallback loadExpenses;
   final Function() buildDashboardCards;
@@ -519,12 +470,10 @@ class HomeContent extends StatefulWidget  {
                   builder: (context, box, _) {
 
                     final expenses = box.keys.map((key) {
-                      final item = Map<String, dynamic>.from(box.get(key));
-                      item['key'] = key;
-                      return item;
+                      final map = Map<String, dynamic>.from(box.get(key));
+                      return Expense.fromMap(map, key);
                     }).toList()
-                      ..sort((a, b) => DateTime.parse(b['date'])
-                          .compareTo(DateTime.parse(a['date'])));
+                      ..sort((a, b) => b.date.compareTo(a.date));
                     
 
                     if (expenses.isEmpty) {
@@ -601,7 +550,7 @@ class HomeContent extends StatefulWidget  {
                         final item = recentExpenses[index];
 
                         return Dismissible(
-                          key: ValueKey(item['key']), // ✅ IMPORTANT
+                          key: ValueKey(item.id), // ✅ IMPORTANT
 
                           direction: DismissDirection.horizontal,
                           dismissThresholds: const {
@@ -633,9 +582,9 @@ class HomeContent extends StatefulWidget  {
                                 context,
                                 MaterialPageRoute(
                                   builder: (_) => AddExpenseScreen(
-                                    expense: item,
-                                    keyValue: item['key'],
-                                  ),
+                                  expense: item,
+                                  keyValue: item.id,
+                                )
                                 ),
                               );
 
@@ -659,97 +608,97 @@ class HomeContent extends StatefulWidget  {
                           },
 
                           onDismissed: (direction) {
-  // 1️⃣ Backup the deleted item and its key
-  final deletedItem = Map<String, dynamic>.from(item);
-  final deletedKey = item['key'];
+                            // 1️⃣ Backup the deleted item and its key
+                            final deletedItem = item.toMap();
+                            final deletedKey = item.id;
 
-  // 2️⃣ Delete the expense
-  widget.service.deleteExpense(deletedKey);
+                            // 2️⃣ Delete the expense
+                            widget.service.deleteExpense(deletedKey);
 
-  // 3️⃣ Post-frame callback to show SnackBar safely
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    final messenger = ScaffoldMessenger.of(context);
+                            // 3️⃣ Post-frame callback to show SnackBar safely
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              final messenger = ScaffoldMessenger.of(context);
 
-    // Clear any existing SnackBars
-    messenger.clearSnackBars();
+                              // Clear any existing SnackBars
+                              messenger.clearSnackBars();
 
-    // 4️⃣ Declare controller before use
-    late ScaffoldFeatureController<SnackBar, SnackBarClosedReason> controller;
+                              // 4️⃣ Declare controller before use
+                              late ScaffoldFeatureController<SnackBar, SnackBarClosedReason> controller;
 
-    // 5️⃣ Show SnackBar with UNDO
-    controller = messenger.showSnackBar(
-      SnackBar(
-        duration: const Duration(seconds: 3),
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        backgroundColor: Colors.orange,
-        content: const Text(
-          "Expense deleted",
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        action: SnackBarAction(
-          label: "UNDO",
-          textColor: Colors.white,
-          onPressed: () {
-            // 6️⃣ Restore the expense safely
-            final newItem = Map<String, dynamic>.from(deletedItem);
-            newItem.remove('key');
-            widget.service.addExpenseWithKey(deletedKey, newItem);
+                              // 5️⃣ Show SnackBar with UNDO
+                              controller = messenger.showSnackBar(
+                                SnackBar(
+                                  duration: const Duration(seconds: 3),
+                                  behavior: SnackBarBehavior.floating,
+                                  margin: const EdgeInsets.all(12),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  backgroundColor: Colors.orange,
+                                  content: const Text(
+                                    "Expense deleted",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  action: SnackBarAction(
+                                    label: "UNDO",
+                                    textColor: Colors.white,
+                                    onPressed: () {
+                                      // 6️⃣ Restore the expense safely
+                                      final newItem = Map<String, dynamic>.from(deletedItem);
+                                      newItem.remove('key');
+                                      widget.service.addExpenseWithKey(deletedKey, newItem);
 
-            // 7️⃣ Close this SnackBar safely
-            try {
-              controller.close();
-            } catch (_) {
-              // ignore if already dismissed
-            }
+                                      // 7️⃣ Close this SnackBar safely
+                                      try {
+                                        controller.close();
+                                      } catch (_) {
+                                        // ignore if already dismissed
+                                      }
 
-            // Optional: Show a restored SnackBar
-            late ScaffoldFeatureController<SnackBar, SnackBarClosedReason> restoredController;
-            restoredController = messenger.showSnackBar(
-              SnackBar(
-                duration: const Duration(seconds: 2),
-                behavior: SnackBarBehavior.floating,
-                margin: const EdgeInsets.all(12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                backgroundColor: Colors.green,
-                content: const Text(
-                  "Expense restored successfully",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            );
+                                      // Optional: Show a restored SnackBar
+                                      late ScaffoldFeatureController<SnackBar, SnackBarClosedReason> restoredController;
+                                      restoredController = messenger.showSnackBar(
+                                        SnackBar(
+                                          duration: const Duration(seconds: 2),
+                                          behavior: SnackBarBehavior.floating,
+                                          margin: const EdgeInsets.all(12),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          backgroundColor: Colors.green,
+                                          content: const Text(
+                                            "Expense restored successfully",
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      );
 
-            Future.delayed(const Duration(seconds: 2), () {
-              try {
-                restoredController.close();
-              } catch (_) {}
-            });
-          },
-        ),
-      ),
-    );
+                                      Future.delayed(const Duration(seconds: 2), () {
+                                        try {
+                                          restoredController.close();
+                                        } catch (_) {}
+                                      });
+                                    },
+                                  ),
+                                ),
+                              );
 
-    // 8️⃣ Auto-dismiss delete SnackBar after 3 sec
-    Future.delayed(const Duration(seconds: 3), () {
-      try {
-        controller.close();
-      } catch (_) {
-        // ignore if already dismissed
-      }
-    });
-  });
-},
+                              // 8️⃣ Auto-dismiss delete SnackBar after 3 sec
+                              Future.delayed(const Duration(seconds: 3), () {
+                                try {
+                                  controller.close();
+                                } catch (_) {
+                                  // ignore if already dismissed
+                                }
+                              });
+                            });
+                          },
 
                           background: Container(
                             decoration: BoxDecoration(
@@ -784,11 +733,7 @@ class HomeContent extends StatefulWidget  {
                             ),
                           ),
 
-                          child: ExpenseCard(
-                            item: item,
-                            color: getCategoryColor(item['category']),
-                            formatDate: widget.formatDate,
-                          ),
+                          child: ExpenseCard(item: item)
                         );
                       },
                     );
@@ -799,128 +744,4 @@ class HomeContent extends StatefulWidget  {
         
     ); // 👈 pura jo body me tha
   }
-}
-
-
-
-
-  // Category icons 
-
-  IconData getCategoryIcon(String category) {
-    switch (category) {
-      case "Food":
-        return Icons.restaurant;
-      case "Travel":
-        return Icons.directions_car;
-      case "Shopping":
-        return Icons.shopping_bag;
-      case "Bills":
-        return Icons.receipt;
-      default:
-        return Icons.category;
-    }
-  }
-
-class ExpenseCard extends StatefulWidget {
-  final Map<String, dynamic> item;
-  final Color color;
-  final String Function(String) formatDate;
-
-  const ExpenseCard({
-    super.key,
-    required this.item,
-    required this.color,
-    required this.formatDate,
-  });
-
-  @override
-  State<ExpenseCard> createState() => _ExpenseCardState();
-}
-
-class _ExpenseCardState extends State<ExpenseCard> {
-  bool isExpanded = false;
-
-  @override
-Widget build(BuildContext context) {
-  final item = widget.item;
-
-  return GestureDetector(
-    onTap: () {
-      setState(() {
-        isExpanded = !isExpanded;
-      });
-    },
-    child: ClipRRect(
-      borderRadius: BorderRadius.circular(16), // same rounded corners
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8), // blur effect
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white24),
-              ),
-          child: Row(
-            children: [
-              CircleAvatar(
-                backgroundColor: widget.color.withOpacity(0.2),
-                child: Icon(
-                  getCategoryIcon(item['category']),
-                  color: widget.color,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(item['category'],style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold)),
-                    
-                    AnimatedCrossFade(
-                      duration: const Duration(milliseconds: 250),
-                      crossFadeState: isExpanded
-                          ? CrossFadeState.showSecond
-                          : CrossFadeState.showFirst,
-                      firstChild: Text(
-                        item['note'],
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Colors.white70,
-                        ),
-                      ),
-                      secondChild: Text(
-                        item['note'],
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Colors.white70,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      widget.formatDate(item['date']),
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey,
-                        fontWeight: FontWeight.bold
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Text(
-                "₹${item['amount'].toStringAsFixed(2)}",
-                style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-        ),
-      ),
-    ),
-  );
-}
 }

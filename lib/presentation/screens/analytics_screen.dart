@@ -51,7 +51,7 @@ class AnalyticsScreen extends StatelessWidget {
             total += amount;
 
             categoryMap[e['category']] =
-            (categoryMap[e['category']] ?? 0) + amount;
+                (categoryMap[e['category']] ?? 0) + amount;
           }
 
           String topCategory = "";
@@ -246,7 +246,7 @@ class AnalyticsScreen extends StatelessWidget {
   ..sort((a, b) => b.value.compareTo(a.value));
 
   return Padding(
-      padding: const EdgeInsets.fromLTRB(6, 6, 6, 90), // bottom 90 extra
+      padding: const EdgeInsets.fromLTRB(1, 1, 1, 90), // bottom 90 extra
       
       child: Column(
         children: sorted.map((entry){
@@ -321,7 +321,7 @@ class AnalyticsScreen extends StatelessWidget {
       final percent = (entry.value / total) * 100;
 
       return PieChartSectionData(
-        color: getCategoryColor(entry.key),
+        color: CategoryUtils.getColor(entry.key),
         value: entry.value,
         title: "${percent.toStringAsFixed(1)}%",
         radius: 60,
@@ -374,7 +374,7 @@ class AnalyticsScreen extends StatelessWidget {
                     : data.keys).map((key) {
                   final value = data[key] ?? 0;
                   final percent = total == 0 ? 0 : (value / total) * 100;
-                  final color = getCategoryColor(key);
+                  final color = CategoryUtils.getColor(key);
 
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4),

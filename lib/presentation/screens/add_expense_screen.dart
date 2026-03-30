@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../data/services/expense_service.dart';
+import '../../data/models/expense_model.dart';
 import 'dart:ui';
 
 class AddExpenseScreen extends StatefulWidget {
-  final Map<String, dynamic>? expense;
+  final Expense? expense;
   final dynamic keyValue;
 
   const AddExpenseScreen({super.key, this.expense, this.keyValue});
@@ -25,9 +26,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   void initState() {
     super.initState();
     if (widget.expense != null) {
-      _amountController.text = widget.expense!['amount'].toString();
-      _noteController.text = widget.expense!['note'];
-      selectedCategory = widget.expense!['category'];
+      _amountController.text = widget.expense!.amount.toString();
+      _noteController.text = widget.expense!.note;
+      selectedCategory = widget.expense!.category;
     }
   }
 
@@ -39,12 +40,12 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       "category": selectedCategory,
       "note": _noteController.text,
       "date": widget.expense != null
-          ? widget.expense!['date']
+          ? widget.expense!.date
           : DateTime.now().toString(),
     };
 
     if (widget.keyValue == null) {
-      final key = DateTime.now().millisecondsSinceEpoch.toString(); // ✅ string key
+      final key = DateTime.now().millisecondsSinceEpoch.toString(); 
       data['key'] = key;
       service.addExpenseWithKey(key, data);
     } else {
@@ -207,15 +208,11 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     // Save Button
                     ElevatedButton(
                       onPressed: () {
-  print("Button Clicked"); // 👈 check 1
-
-  if (_formKey.currentState!.validate()) {
-    print("Validation Passed"); // 👈 check 2
-    saveExpense();
-  } else {
-    print("Validation Failed ❌"); // 👈 check 3
-  }
-},
+                        if (_formKey.currentState!.validate()) {
+                          saveExpense();
+                        } else {
+                        }
+                      },
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
                         backgroundColor: const Color(0xFF6A11CB),

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../data/services/expense_service.dart';
 import '../../core/utils/category_utils.dart';
-import 'home_screen.dart';
+import '../widgets/expense_card.dart';
+import '../../data/models/expense_model.dart';
 import 'add_expense_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
@@ -16,6 +17,10 @@ class HistoryScreen extends StatefulWidget {
 class _HistoryScreenState extends State<HistoryScreen> {
   final service = ExpenseService();
 
+  String searchQuery = '';
+  String selectedCategory = 'All';
+  DateTime? selectedMonth;
+
   String formatDate(DateTime date) {
     return DateFormat('dd MMM yyyy • hh:mm a').format(date);
   }
@@ -24,9 +29,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      // appBar: AppBar(
-        
-      // ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -38,17 +40,106 @@ class _HistoryScreenState extends State<HistoryScreen> {
             end: Alignment.bottomRight,
           ),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             const SizedBox(height: 8),
-            // 🔥 Expenses list
+
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  searchQuery = '';
+                  selectedCategory = 'All';
+                  selectedMonth = null;
+                });
+              },
+              child: const Text("Clear Filters"),
+            ),
+
+            TextField(
+              onChanged: (value) {
+                setState(() {
+                  searchQuery = value.toLowerCase();
+                });
+              },
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: "Search expenses...",
+                hintStyle: const TextStyle(color: Colors.white54),
+                prefixIcon: const Icon(Icons.search, color: Colors.white70),
+                filled: true,
+                fillColor: Colors.white.withOpacity(0.1),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            DropdownButton<String>(
+              value: selectedCategory,
+              dropdownColor: Colors.black,
+              isExpanded: true,
+              items: ['All', 'Food', 'Travel', 'Shopping', 'Bills', 'Other']
+                  .map((cat) => DropdownMenuItem(
+                        value: cat,
+                        child: Text(cat, style: const TextStyle(color: Colors.white)),
+                      ))
+                  .toList(),
+              onChanged: (value) {
+                setState(() {
+                  selectedCategory = value!;
+                });
+              },
+            ),
+            const SizedBox(height: 10),
+
+            ElevatedButton(
+              onPressed: () async {
+                final picked = await showDatePicker(
+                  context: context,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime.now(),
+                );
+
+                if (picked != null) {
+                  setState(() {
+                    selectedMonth = picked;
+                  });
+                }
+              },
+              child: const Text("Filter by Month"),
+            ),
+
             Expanded(
               child: ValueListenableBuilder(
                 valueListenable: service.box.listenable(),
-                builder: (context, Box box, _) {
+                builder: (context, box, _) {
+                  
+                  final expenses = box.keys.map((key) {
+                    final map = Map<String, dynamic>.from(box.get(key));
+                    return Expense.fromMap(map, key);
+                  }).toList()
+                    ..sort((a, b) => b.date.compareTo(a.date));
 
-                  if (box.isEmpty) {
+                  final filteredExpenses = expenses.where((e) {
+                    final matchesSearch =
+                        e.note.toLowerCase().contains(searchQuery) ||
+                        e.category.toLowerCase().contains(searchQuery);
+
+                    final matchesCategory =
+                        selectedCategory == 'All' || e.category == selectedCategory;
+
+                    final matchesMonth = selectedMonth == null ||
+                        (e.date.month == selectedMonth!.month &&
+                        e.date.year == selectedMonth!.year);
+
+                    return matchesSearch && matchesCategory && matchesMonth;
+                  }).toList();
+
+                  if (expenses.isEmpty) {
                     return Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: const [
@@ -60,15 +151,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         ),
                       ],
                     );
-                  }                  
-
-                  final expenses = box.keys.map((key) {
-                    final item = Map<String, dynamic>.from(box.get(key));
-                    item['key'] = key;
-                    item['parsedDate'] = DateTime.parse(item['date']); //
-                    return item;
-                  }).toList()
-                    ..sort((a, b) => b['parsedDate'].compareTo(a['parsedDate']));                    
+                  }
 
                   return ListView.builder(
                     padding: const EdgeInsets.only(bottom: 80),
@@ -77,7 +160,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       final item = expenses[index];
 
                       return Dismissible(
-                        key: ValueKey(item['key']),
+                        key: ValueKey(item.id),
                         direction: DismissDirection.horizontal,
 
                         confirmDismiss: (direction) async {
@@ -87,7 +170,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               builder: (_) => AlertDialog(
                                 title: const Text("Delete?"),
                                 content: const Text(
-                                    "Are you sure you want to delete this expense?"),
+                                  "Are you sure you want to delete this expense?",
+                                ),
                                 actions: [
                                   TextButton(
                                     onPressed: () => Navigator.pop(context, false),
@@ -105,14 +189,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (_) => AddExpenseScreen(
-                                expense: item,              // 🔥 PASS DATA
-                                keyValue: item['key'],      // 🔥 PASS KEY
-                              ),
+                                  expense: item,
+                                  keyValue: item.id,
+                                ),
                               ),
                             );
 
                             if (result != null && result['success'] == true) {
-                              if (!mounted) return false;
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
@@ -124,98 +207,103 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                 ),
                               );
                             }
-                            return false; // 🔥 important
+
+                            return false;
                           }
                         },
 
                         onDismissed: (direction) {
-  // 1️⃣ Backup the deleted item
-  final deletedItem = Map<String, dynamic>.from(item);
-  final deletedKey = item['key'];
+                            // 1️⃣ Backup the deleted item and its key
+                            final deletedItem = item.toMap();
+                            final deletedKey = item.id;
 
-  // 2️⃣ Delete from Hive
-  service.box.delete(deletedKey);
+                            // 2️⃣ Delete the expense
+                            service.deleteExpense(deletedKey);
 
-  // 3️⃣ Post-frame callback to safely show SnackBar
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    final messenger = ScaffoldMessenger.of(context);
+                            // 3️⃣ Post-frame callback to show SnackBar safely
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              final messenger = ScaffoldMessenger.of(context);
 
-    // Clear any existing SnackBars
-    messenger.clearSnackBars();
+                              // Clear any existing SnackBars
+                              messenger.clearSnackBars();
 
-    // 4️⃣ Declare controller first
-    late ScaffoldFeatureController<SnackBar, SnackBarClosedReason> controller;
+                              // 4️⃣ Declare controller before use
+                              late ScaffoldFeatureController<SnackBar, SnackBarClosedReason> controller;
 
-    // 5️⃣ Show delete SnackBar with UNDO
-    controller = messenger.showSnackBar(
-      SnackBar(
-        duration: const Duration(seconds: 3),
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        backgroundColor: Colors.orange,
-        content: const Text(
-          "Expense deleted",
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        action: SnackBarAction(
-          label: "UNDO",
-          textColor: Colors.white,
-          onPressed: () {
-            // 6️⃣ Restore the deleted item safely
-            final newItem = Map<String, dynamic>.from(deletedItem);
-            newItem.remove('key'); // avoid duplicate key
-            service.addExpenseWithKey(deletedKey, newItem);
+                              // 5️⃣ Show SnackBar with UNDO
+                              controller = messenger.showSnackBar(
+                                SnackBar(
+                                  duration: const Duration(seconds: 3),
+                                  behavior: SnackBarBehavior.floating,
+                                  margin: const EdgeInsets.all(12),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  backgroundColor: Colors.orange,
+                                  content: const Text(
+                                    "Expense deleted",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  action: SnackBarAction(
+                                    label: "UNDO",
+                                    textColor: Colors.white,
+                                    onPressed: () {
+                                      // 6️⃣ Restore the expense safely
+                                      final newItem = Map<String, dynamic>.from(deletedItem);
+                                      newItem.remove('key');
+                                      service.addExpenseWithKey(deletedKey, newItem);
 
-            // 7️⃣ Close this SnackBar safely
-            try {
-              controller.close();
-            } catch (_) {}
+                                      // 7️⃣ Close this SnackBar safely
+                                      try {
+                                        controller.close();
+                                      } catch (_) {
+                                        // ignore if already dismissed
+                                      }
 
-            // 8️⃣ Show restored SnackBar
-            late ScaffoldFeatureController<SnackBar, SnackBarClosedReason> restoredController;
-            restoredController = messenger.showSnackBar(
-              SnackBar(
-                duration: const Duration(seconds: 2),
-                behavior: SnackBarBehavior.floating,
-                margin: const EdgeInsets.all(12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                backgroundColor: Colors.green,
-                content: const Text(
-                  "Expense restored successfully",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            );
+                                      // Optional: Show a restored SnackBar
+                                      late ScaffoldFeatureController<SnackBar, SnackBarClosedReason> restoredController;
+                                      restoredController = messenger.showSnackBar(
+                                        SnackBar(
+                                          duration: const Duration(seconds: 2),
+                                          behavior: SnackBarBehavior.floating,
+                                          margin: const EdgeInsets.all(12),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          backgroundColor: Colors.green,
+                                          content: const Text(
+                                            "Expense restored successfully",
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      );
 
-            Future.delayed(const Duration(seconds: 2), () {
-              try {
-                restoredController.close();
-              } catch (_) {}
-            });
-          },
-        ),
-      ),
-    );
+                                      Future.delayed(const Duration(seconds: 2), () {
+                                        try {
+                                          restoredController.close();
+                                        } catch (_) {}
+                                      });
+                                    },
+                                  ),
+                                ),
+                              );
 
-    // 9️⃣ Auto-dismiss delete SnackBar after 3 sec safely
-    Future.delayed(const Duration(seconds: 3), () {
-      try {
-        controller.close();
-      } catch (_) {}
-    });
-  });
-},
+                              // 8️⃣ Auto-dismiss delete SnackBar after 3 sec
+                              Future.delayed(const Duration(seconds: 3), () {
+                                try {
+                                  controller.close();
+                                } catch (_) {
+                                  // ignore if already dismissed
+                                }
+                              });
+                            });
+                          },
 
                         background: Container(
                           decoration: BoxDecoration(
@@ -252,11 +340,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           ),
                         ),
 
-                        child: ExpenseCard(
-                          item: item,
-                          color: getCategoryColor(item['category']),
-                          formatDate: (_) => formatDate(item['parsedDate']),
-                        ),
+                        child: ExpenseCard(item: item),
                       );
                     },
                   );
