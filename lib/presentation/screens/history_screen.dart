@@ -6,6 +6,7 @@ import '../../data/models/expense_model.dart';
 import 'add_expense_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
+import '../widgets/search_filter_bar.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -45,72 +46,27 @@ class _HistoryScreenState extends State<HistoryScreen> {
           children: [
             const SizedBox(height: 8),
 
-            TextButton(
-              onPressed: () {
+            SearchFilterBar(
+              onSearch: (value) {
+                setState(() {
+                  searchQuery = value;
+                });
+              },
+              selectedCategory: selectedCategory,
+              selectedMonth: selectedMonth,
+              onCategoryChanged: (val) {
+                setState(() => selectedCategory = val);
+              },
+              onMonthChanged: (val) {
+                setState(() => selectedMonth = val);
+              },
+              onClear: () {
                 setState(() {
                   searchQuery = '';
                   selectedCategory = 'All';
                   selectedMonth = null;
                 });
               },
-              child: const Text("Clear Filters"),
-            ),
-
-            TextField(
-              onChanged: (value) {
-                setState(() {
-                  searchQuery = value.toLowerCase();
-                });
-              },
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                hintText: "Search expenses...",
-                hintStyle: const TextStyle(color: Colors.white54),
-                prefixIcon: const Icon(Icons.search, color: Colors.white70),
-                filled: true,
-                fillColor: Colors.white.withOpacity(0.1),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-            ),
-            const SizedBox(height: 10),
-
-            DropdownButton<String>(
-              value: selectedCategory,
-              dropdownColor: Colors.black,
-              isExpanded: true,
-              items: ['All', 'Food', 'Travel', 'Shopping', 'Bills', 'Other']
-                  .map((cat) => DropdownMenuItem(
-                        value: cat,
-                        child: Text(cat, style: const TextStyle(color: Colors.white)),
-                      ))
-                  .toList(),
-              onChanged: (value) {
-                setState(() {
-                  selectedCategory = value!;
-                });
-              },
-            ),
-            const SizedBox(height: 10),
-
-            ElevatedButton(
-              onPressed: () async {
-                final picked = await showDatePicker(
-                  context: context,
-                  initialDate: DateTime.now(),
-                  firstDate: DateTime(2020),
-                  lastDate: DateTime.now(),
-                );
-
-                if (picked != null) {
-                  setState(() {
-                    selectedMonth = picked;
-                  });
-                }
-              },
-              child: const Text("Filter by Month"),
             ),
 
             Expanded(
