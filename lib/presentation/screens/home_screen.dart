@@ -659,44 +659,95 @@ class HomeContent extends StatefulWidget  {
                           },
 
                           onDismissed: (direction) {
+  // 1️⃣ Backup the deleted item and its key
   final deletedItem = Map<String, dynamic>.from(item);
   final deletedKey = item['key'];
 
-  final messenger = ScaffoldMessenger.of(context);
-
+  // 2️⃣ Delete the expense
   widget.service.deleteExpense(deletedKey);
 
-  messenger.clearSnackBars();
+  // 3️⃣ Post-frame callback to show SnackBar safely
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    final messenger = ScaffoldMessenger.of(context);
 
-  final controller = messenger.showSnackBar(
-    SnackBar(
-      duration: const Duration(seconds: 3),
-      behavior: SnackBarBehavior.floating,
-      margin: const EdgeInsets.all(12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      backgroundColor: Colors.orange,
-      content: const Text(
-        "Expense deleted",
-        style: TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
+    // Clear any existing SnackBars
+    messenger.clearSnackBars();
+
+    // 4️⃣ Declare controller before use
+    late ScaffoldFeatureController<SnackBar, SnackBarClosedReason> controller;
+
+    // 5️⃣ Show SnackBar with UNDO
+    controller = messenger.showSnackBar(
+      SnackBar(
+        duration: const Duration(seconds: 3),
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        backgroundColor: Colors.orange,
+        content: const Text(
+          "Expense deleted",
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        action: SnackBarAction(
+          label: "UNDO",
+          textColor: Colors.white,
+          onPressed: () {
+            // 6️⃣ Restore the expense safely
+            final newItem = Map<String, dynamic>.from(deletedItem);
+            newItem.remove('key');
+            widget.service.addExpenseWithKey(deletedKey, newItem);
+
+            // 7️⃣ Close this SnackBar safely
+            try {
+              controller.close();
+            } catch (_) {
+              // ignore if already dismissed
+            }
+
+            // Optional: Show a restored SnackBar
+            late ScaffoldFeatureController<SnackBar, SnackBarClosedReason> restoredController;
+            restoredController = messenger.showSnackBar(
+              SnackBar(
+                duration: const Duration(seconds: 2),
+                behavior: SnackBarBehavior.floating,
+                margin: const EdgeInsets.all(12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                backgroundColor: Colors.green,
+                content: const Text(
+                  "Expense restored successfully",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            );
+
+            Future.delayed(const Duration(seconds: 2), () {
+              try {
+                restoredController.close();
+              } catch (_) {}
+            });
+          },
         ),
       ),
-      action: SnackBarAction(
-        label: "UNDO",
-        textColor: Colors.white,
-        onPressed: () {
-          widget.service.addExpenseWithKey(deletedKey, deletedItem);
-        },
-      ),
-    ),
-  );
+    );
 
-  // 🔥 FORCE DISMISS AFTER 3 SEC
-  Future.delayed(const Duration(seconds: 3), () {
-    controller.close(); // 👈 THIS IS KEY
+    // 8️⃣ Auto-dismiss delete SnackBar after 3 sec
+    Future.delayed(const Duration(seconds: 3), () {
+      try {
+        controller.close();
+      } catch (_) {
+        // ignore if already dismissed
+      }
+    });
   });
 },
 

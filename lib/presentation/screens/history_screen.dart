@@ -129,46 +129,91 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         },
 
                         onDismissed: (direction) {
+  // 1️⃣ Backup the deleted item
   final deletedItem = Map<String, dynamic>.from(item);
+  final deletedKey = item['key'];
 
-  // 🔥 delete from Hive
-  service.box.delete(item['key']);
+  // 2️⃣ Delete from Hive
+  service.box.delete(deletedKey);
 
-  final messenger = ScaffoldMessenger.of(context);
-  messenger.clearSnackBars();
+  // 3️⃣ Post-frame callback to safely show SnackBar
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    final messenger = ScaffoldMessenger.of(context);
 
-  final controller = messenger.showSnackBar(
-    SnackBar(
-      duration: const Duration(seconds: 3),
-      behavior: SnackBarBehavior.floating,
-      margin: const EdgeInsets.all(12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      backgroundColor: Colors.orange,
-      content: const Text(
-        "Expense deleted",
-        style: TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
+    // Clear any existing SnackBars
+    messenger.clearSnackBars();
+
+    // 4️⃣ Declare controller first
+    late ScaffoldFeatureController<SnackBar, SnackBarClosedReason> controller;
+
+    // 5️⃣ Show delete SnackBar with UNDO
+    controller = messenger.showSnackBar(
+      SnackBar(
+        duration: const Duration(seconds: 3),
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        backgroundColor: Colors.orange,
+        content: const Text(
+          "Expense deleted",
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        action: SnackBarAction(
+          label: "UNDO",
+          textColor: Colors.white,
+          onPressed: () {
+            // 6️⃣ Restore the deleted item safely
+            final newItem = Map<String, dynamic>.from(deletedItem);
+            newItem.remove('key'); // avoid duplicate key
+            service.addExpenseWithKey(deletedKey, newItem);
+
+            // 7️⃣ Close this SnackBar safely
+            try {
+              controller.close();
+            } catch (_) {}
+
+            // 8️⃣ Show restored SnackBar
+            late ScaffoldFeatureController<SnackBar, SnackBarClosedReason> restoredController;
+            restoredController = messenger.showSnackBar(
+              SnackBar(
+                duration: const Duration(seconds: 2),
+                behavior: SnackBarBehavior.floating,
+                margin: const EdgeInsets.all(12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                backgroundColor: Colors.green,
+                content: const Text(
+                  "Expense restored successfully",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            );
+
+            Future.delayed(const Duration(seconds: 2), () {
+              try {
+                restoredController.close();
+              } catch (_) {}
+            });
+          },
         ),
       ),
-      action: SnackBarAction(
-        label: "UNDO",
-        textColor: Colors.white,
-        onPressed: () {
-          // 🔹 Add deleted item back
-          final newItem = Map<String, dynamic>.from(deletedItem);
-          newItem.remove('key'); // avoid duplicate key
-          service.addExpenseWithKey(deletedItem['key'], newItem);
-        },
-      ),
-    ),
-  );
+    );
 
-  // 🔹 Force dismiss after 3 sec
-  Future.delayed(const Duration(seconds: 3), () {
-    controller.close();
+    // 9️⃣ Auto-dismiss delete SnackBar after 3 sec safely
+    Future.delayed(const Duration(seconds: 3), () {
+      try {
+        controller.close();
+      } catch (_) {}
+    });
   });
 },
 
