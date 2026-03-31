@@ -25,6 +25,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
   DateTime? startDate;
   DateTime? endDate;
 
+  DateTime normalize(DateTime d) {
+    return DateTime(d.year, d.month, d.day);
+  }
+
   String formatDate(DateTime date) {
     return DateFormat('dd MMM yyyy • hh:mm a').format(date);
   }
@@ -48,7 +52,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         child: Column(
           children: [
             const SizedBox(height: 8),
-            
+           
             SearchFilterBar(
               onSearch: (value) {
                 setState(() {
@@ -90,6 +94,46 @@ class _HistoryScreenState extends State<HistoryScreen> {
             ),
 
             const SizedBox(height: 8),
+
+            if (selectedCategory != 'All' || selectedMonth != null || startDate != null)
+              Wrap(
+                spacing: 8,
+                children: [
+
+                  if (selectedCategory != 'All')
+                    Chip(
+                      label: Text(selectedCategory),
+                      onDeleted: () {
+                        setState(() => selectedCategory = 'All');
+                      },
+                    ),
+
+                  if (selectedMonth != null)
+                    Chip(
+                      label: Text("${selectedMonth!.month}/${selectedMonth!.year}"),
+                      onDeleted: () {
+                        setState(() => selectedMonth = null);
+                      },
+                    ),
+
+                  if (startDate != null && endDate != null)
+                    Chip(
+                      label: Text(
+                        startDate == endDate
+                            ? "${startDate!.day}/${startDate!.month}"
+                            : "${startDate!.day}/${startDate!.month} - ${endDate!.day}/${endDate!.month}"
+                      ),
+                      onDeleted: () {
+                        setState(() {
+                          startDate = null;
+                          endDate = null;
+                        });
+                      },
+                    ),
+                ],
+              ),
+
+              const SizedBox(height: 8),
 
             Expanded(
               child: ValueListenableBuilder(

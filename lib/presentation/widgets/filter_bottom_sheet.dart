@@ -128,6 +128,38 @@ class FilterBottomSheet extends StatelessWidget {
           //   ),
           // ),
 
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+
+              ElevatedButton(
+                onPressed: () {
+                  final today = DateTime.now();
+
+                  onStartDateChanged?.call(today);
+                  onEndDateChanged?.call(today);
+
+                  Navigator.pop(context);
+                },
+                child: const Text("Today"),
+              ),
+
+              ElevatedButton(
+                onPressed: () {
+                  final today = DateTime.now();
+                  final last7 = today.subtract(const Duration(days: 6));
+
+                  onStartDateChanged?.call(last7);
+                  onEndDateChanged?.call(today);
+
+                  Navigator.pop(context);
+                },
+                child: const Text("Last 7 Days"),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
           // 🔥 SINGLE DATE BUTTON
           ElevatedButton(
             onPressed: () async {
