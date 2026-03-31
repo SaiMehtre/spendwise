@@ -3,13 +3,11 @@ import 'add_expense_screen.dart';
 import '../../data/services/expense_service.dart';
 import 'analytics_screen.dart';
 import 'package:intl/intl.dart';
-import '../../core/utils/category_utils.dart';
 import 'dart:ui';
 import 'history_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../widgets/expense_card.dart';
 import '../../data/models/expense_model.dart';
-import '../../core/utils/expense_utils.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

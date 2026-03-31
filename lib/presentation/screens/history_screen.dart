@@ -7,6 +7,7 @@ import 'add_expense_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
 import '../widgets/search_filter_bar.dart';
+import '../../core/utils/category_utils.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -25,7 +26,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   DateTime? startDate;
   DateTime? endDate;  
 
-  Timer? _debounce;
+  Timer? _debounce; 
 
   DateTime normalize(DateTime d) {
     return DateTime(d.year, d.month, d.day);
@@ -44,6 +45,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final color = CategoryUtils.getColor(selectedCategory);
+    final icon = CategoryUtils.getIcon(selectedCategory);
     
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -111,7 +114,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             const SizedBox(height: 8),
 
             if (selectedCategory != 'All' || selectedMonth != null || startDate != null)
-              Padding(
+              Padding(                               
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Wrap(
                   spacing: 10,
@@ -133,12 +136,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         },
                         child: Chip(
                           key: ValueKey(selectedCategory), // 🔥 IMPORTANT
-                          avatar: const Icon(Icons.category, color: Colors.white, size: 18),
+                          avatar: Icon(icon, color: Colors.white, size: 18),
                           label: Text(
                             selectedCategory,
                             style: const TextStyle(color: Colors.white),
                           ),
-                          backgroundColor: Colors.blueAccent,
+                          backgroundColor: color.withOpacity(0.9),
+                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           deleteIcon: const Icon(Icons.close, color: Colors.white),
                           onDeleted: () {
                             setState(() => selectedCategory = 'All');
