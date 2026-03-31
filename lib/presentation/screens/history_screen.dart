@@ -114,45 +114,109 @@ class _HistoryScreenState extends State<HistoryScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Wrap(
-                  spacing: 8,
+                  spacing: 10,
+                  runSpacing: 6,
                   children: [
 
+                    /// 🔵 CATEGORY CHIP
                     if (selectedCategory != 'All')
-                      Chip(
-                        label: Text(selectedCategory),
-                        onDeleted: () {
-                          setState(() => selectedCategory = 'All');
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 400),
+                        transitionBuilder: (child, animation) {
+                          return ScaleTransition(
+                            scale: animation,
+                            child: FadeTransition(
+                              opacity: animation,
+                              child: child,
+                            ),
+                          );
                         },
+                        child: Chip(
+                          key: ValueKey(selectedCategory), // 🔥 IMPORTANT
+                          avatar: const Icon(Icons.category, color: Colors.white, size: 18),
+                          label: Text(
+                            selectedCategory,
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                          backgroundColor: Colors.blueAccent,
+                          deleteIcon: const Icon(Icons.close, color: Colors.white),
+                          onDeleted: () {
+                            setState(() => selectedCategory = 'All');
+                          },
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
                       ),
 
+                    /// 🟣 MONTH CHIP
                     if (selectedMonth != null)
-                      Chip(
-                        label: Text(
-                          (endDate == null || startDate == endDate)
-                              ? DateFormat('dd MMM').format(startDate!)
-                              : "${DateFormat('dd MMM').format(startDate!)} - ${DateFormat('dd MMM').format(endDate!)}"
-                        ),
-                        onDeleted: () {
-                          setState(() => selectedMonth = null);
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 400),
+                        transitionBuilder: (child, animation) {
+                          return ScaleTransition(
+                            scale: animation,
+                            child: FadeTransition(
+                              opacity: animation,
+                              child: child,
+                            ),
+                          );
                         },
+                        child: Chip(
+                          key: ValueKey(selectedMonth), // 🔥 IMPORTANT
+                          avatar: const Icon(Icons.calendar_month, color: Colors.white, size: 18),
+                          label: Text(
+                            DateFormat.MMM().format(selectedMonth!),
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                          backgroundColor: Colors.purple,
+                          deleteIcon: const Icon(Icons.close, color: Colors.white),
+                          onDeleted: () {
+                            setState(() => selectedMonth = null);
+                          },
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
                       ),
 
-                    if (startDate != null && endDate != null)
-                      Chip(
-                        label: Text(
-                          startDate == endDate
-                              ? DateFormat('dd MMM').format(startDate!)
-                              : "${DateFormat('dd MMM').format(startDate!)} - ${DateFormat('dd MMM').format(endDate!)}"
-                        ),
-                        onDeleted: () {
-                          setState(() {
-                            startDate = null;
-                            endDate = null;
-                          });
+                    /// 🟢 DATE RANGE CHIP
+                    if (startDate != null)
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 400),
+                        transitionBuilder: (child, animation) {
+                          return ScaleTransition(
+                            scale: animation,
+                            child: FadeTransition(
+                              opacity: animation,
+                              child: child,
+                            ),
+                          );
                         },
+                        child: Chip(
+                          key: ValueKey(startDate.toString() + endDate.toString()), // 🔥 IMPORTANT
+                          avatar: const Icon(Icons.date_range, color: Colors.white, size: 18),
+                          label: Text(
+                            (endDate == null || startDate == endDate)
+                                ? DateFormat('dd MMM').format(startDate!)
+                                : "${DateFormat('dd MMM').format(startDate!)} - ${DateFormat('dd MMM').format(endDate!)}",
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                          backgroundColor: Colors.green,
+                          deleteIcon: const Icon(Icons.close, color: Colors.white),
+                          onDeleted: () {
+                            setState(() {
+                              startDate = null;
+                              endDate = null;
+                            });
+                          },
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
                       ),
                   ],
-                ),
+                )
               ),
 
             const SizedBox(height: 8),
@@ -186,12 +250,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     final start = startDate != null ? normalize(startDate!) : null;
                     final end = endDate != null ? normalize(endDate!) : null;
 
+                    final month = selectedMonth;
+
                     final matchesMonth =
-                    (start != null || end != null)
-                        ? true
-                        : (selectedMonth == null ||
-                            (expenseDate.year == selectedMonth!.year &&
-                            expenseDate.month == selectedMonth!.month));
+                        (start != null || end != null)
+                            ? true
+                            : (month == null ||
+                                (expenseDate.year == month.year &&
+                                expenseDate.month == month.month));
 
                     // final expenseDate = normalize(e.date);
 
