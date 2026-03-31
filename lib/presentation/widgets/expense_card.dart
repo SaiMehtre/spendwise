@@ -16,9 +16,13 @@ class ExpenseCard extends StatefulWidget {
 class _ExpenseCardState extends State<ExpenseCard> {
   bool isExpanded = false;
 
+
   @override
 Widget build(BuildContext context) {
   final item = widget.item;
+
+  final color = CategoryUtils.getColor(item.category);
+  final icon = CategoryUtils.getIcon(item.category);
 
   return GestureDetector(
     onTap: () {
@@ -32,7 +36,7 @@ Widget build(BuildContext context) {
         filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8), // blur effect
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.fromLTRB(0, 12, 12, 12),
           decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(16),
@@ -40,12 +44,27 @@ Widget build(BuildContext context) {
               ),
           child: Row(
             children: [
-              CircleAvatar(
-                backgroundColor: CategoryUtils.getColor(item.category).withOpacity(0.2),
-                child: Icon(
-                    CategoryUtils.getIcon(item.category),
-                    color: CategoryUtils.getColor(item.category),
+              Container(
+                width: 6,
+                height: 70,
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.9),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    bottomLeft: Radius.circular(16),
                   ),
+                ),
+              ),
+
+              const SizedBox(width: 10),
+
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: color, size: 20),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -55,7 +74,8 @@ Widget build(BuildContext context) {
                     Text((item.category),style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold)),
                     
                     AnimatedCrossFade(
-                      duration: const Duration(milliseconds: 250),
+                      duration: const Duration(milliseconds: 350),
+                      curve: Curves.easeInOut,
                       crossFadeState: isExpanded
                           ? CrossFadeState.showSecond
                           : CrossFadeState.showFirst,
@@ -90,7 +110,7 @@ Widget build(BuildContext context) {
               ),
               Text(
                 FormatUtils.formatCurrency(item.amount),
-                style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold),
+                style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 14,),
               ),
             ],
           ),
