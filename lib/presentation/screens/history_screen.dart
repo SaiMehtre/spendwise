@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import '../../data/services/expense_service.dart';
 import '../widgets/expense_card.dart';
 import '../../data/models/expense_model.dart';
@@ -22,7 +23,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
   DateTime? selectedMonth;
 
   DateTime? startDate;
-  DateTime? endDate;
+  DateTime? endDate;  
+
+  Timer? _debounce;
 
   DateTime normalize(DateTime d) {
     return DateTime(d.year, d.month, d.day);
@@ -32,8 +35,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
     return DateFormat('dd MMM yyyy • hh:mm a').format(date);
   }
 
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    
     return Scaffold(
       extendBodyBehindAppBar: true,
       body: Container(
@@ -53,9 +64,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
             const SizedBox(height: 8),
            
             SearchFilterBar(
+              
               onSearch: (value) {
-                setState(() {
-                  searchQuery = value;
+                if (_debounce?.isActive ?? false) _debounce!.cancel();
+
+                _debounce = Timer(const Duration(milliseconds: 300), () {
+                  setState(() {
+                    searchQuery = value;
+                  });
                 });
               },
               selectedCategory: selectedCategory,
@@ -152,43 +168,51 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   }).toList()
                     ..sort((a, b) => b.date.compareTo(a.date));
 
+
                   final filteredExpenses = expenses.where((e) {
+
+                  final query = searchQuery.toLowerCase();
+
                     final matchesSearch =
-                        e.note.toLowerCase().contains(searchQuery.toLowerCase()) ||
-                        e.category.toLowerCase().contains(searchQuery.toLowerCase());
+                      e.note.toLowerCase().contains(query) ||
+                      e.category.toLowerCase().contains(query);
 
                     final matchesCategory =
                         selectedCategory == 'All' ||
                         e.category.toLowerCase() == selectedCategory.toLowerCase();
 
-                  final expenseDate = normalize(e.date);
+                    final expenseDate = normalize(e.date);
 
-                  final matchesMonth = selectedMonth == null ||
-                    (expenseDate.year == selectedMonth!.year &&
-                    expenseDate.month == selectedMonth!.month);
+                    final start = startDate != null ? normalize(startDate!) : null;
+                    final end = endDate != null ? normalize(endDate!) : null;
 
-                  // final expenseDate = normalize(e.date);
-                  final start = startDate != null ? normalize(startDate!) : null;
-                  final end = endDate != null ? normalize(endDate!) : null;
+                    final matchesMonth =
+                    (start != null || end != null)
+                        ? true
+                        : (selectedMonth == null ||
+                            (expenseDate.year == selectedMonth!.year &&
+                            expenseDate.month == selectedMonth!.month));
 
-                  final matchesRange =
-                    (start == null && end == null) ||
+                    // final expenseDate = normalize(e.date);
 
-                    // Only start selected (single date)
-                    (start != null && end == null && expenseDate == start) ||
+                    final matchesRange =
+                      (start == null && end == null) ||
 
-                    // Only end selected (rare case)
-                    (start == null && end != null && expenseDate == end) ||
+                      // Only start selected (single date)
+                      (start != null && end == null && expenseDate == start) ||
 
-                    // Range selected
-                    (start != null && end != null &&
-                        !expenseDate.isBefore(start) &&
-                        !expenseDate.isAfter(end));
+                      // Only end selected (rare case)
+                      (start == null && end != null && expenseDate == end) ||
 
-                    return matchesSearch &&
-                            matchesCategory &&
-                            matchesMonth &&
-                            matchesRange;
+                      // Range selected
+                      (start != null && end != null &&
+                          !expenseDate.isBefore(start) &&
+                          !expenseDate.isAfter(end));
+
+                      return matchesSearch &&
+                              matchesCategory &&
+                              matchesMonth &&
+                              matchesRange;
                   }).toList();
 
                   
