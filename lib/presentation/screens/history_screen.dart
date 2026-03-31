@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../data/services/expense_service.dart';
-import '../../core/utils/category_utils.dart';
 import '../widgets/expense_card.dart';
 import '../../data/models/expense_model.dart';
 import 'add_expense_screen.dart';
@@ -96,44 +95,51 @@ class _HistoryScreenState extends State<HistoryScreen> {
             const SizedBox(height: 8),
 
             if (selectedCategory != 'All' || selectedMonth != null || startDate != null)
-              Wrap(
-                spacing: 8,
-                children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Wrap(
+                  spacing: 8,
+                  children: [
 
-                  if (selectedCategory != 'All')
-                    Chip(
-                      label: Text(selectedCategory),
-                      onDeleted: () {
-                        setState(() => selectedCategory = 'All');
-                      },
-                    ),
-
-                  if (selectedMonth != null)
-                    Chip(
-                      label: Text("${selectedMonth!.month}/${selectedMonth!.year}"),
-                      onDeleted: () {
-                        setState(() => selectedMonth = null);
-                      },
-                    ),
-
-                  if (startDate != null && endDate != null)
-                    Chip(
-                      label: Text(
-                        startDate == endDate
-                            ? "${startDate!.day}/${startDate!.month}"
-                            : "${startDate!.day}/${startDate!.month} - ${endDate!.day}/${endDate!.month}"
+                    if (selectedCategory != 'All')
+                      Chip(
+                        label: Text(selectedCategory),
+                        onDeleted: () {
+                          setState(() => selectedCategory = 'All');
+                        },
                       ),
-                      onDeleted: () {
-                        setState(() {
-                          startDate = null;
-                          endDate = null;
-                        });
-                      },
-                    ),
-                ],
+
+                    if (selectedMonth != null)
+                      Chip(
+                        label: Text(
+                          (endDate == null || startDate == endDate)
+                              ? DateFormat('dd MMM').format(startDate!)
+                              : "${DateFormat('dd MMM').format(startDate!)} - ${DateFormat('dd MMM').format(endDate!)}"
+                        ),
+                        onDeleted: () {
+                          setState(() => selectedMonth = null);
+                        },
+                      ),
+
+                    if (startDate != null && endDate != null)
+                      Chip(
+                        label: Text(
+                          startDate == endDate
+                              ? DateFormat('dd MMM').format(startDate!)
+                              : "${DateFormat('dd MMM').format(startDate!)} - ${DateFormat('dd MMM').format(endDate!)}"
+                        ),
+                        onDeleted: () {
+                          setState(() {
+                            startDate = null;
+                            endDate = null;
+                          });
+                        },
+                      ),
+                  ],
+                ),
               ),
 
-              const SizedBox(height: 8),
+            const SizedBox(height: 8),
 
             Expanded(
               child: ValueListenableBuilder(
@@ -155,27 +161,29 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         selectedCategory == 'All' ||
                         e.category.toLowerCase() == selectedCategory.toLowerCase();
 
-                   final matchesMonth = selectedMonth == null ||
-                        (e.date.year == selectedMonth!.year &&
-                        e.date.month == selectedMonth!.month);
+                  final expenseDate = normalize(e.date);
 
-                  bool isSameDate(DateTime a, DateTime b) {
-                    return a.year == b.year && a.month == b.month && a.day == b.day;
-                  }
+                  final matchesMonth = selectedMonth == null ||
+                    (expenseDate.year == selectedMonth!.year &&
+                    expenseDate.month == selectedMonth!.month);
 
-                  final matchesRange = (startDate == null && endDate == null) ||
+                  // final expenseDate = normalize(e.date);
+                  final start = startDate != null ? normalize(startDate!) : null;
+                  final end = endDate != null ? normalize(endDate!) : null;
 
-                  (startDate != null && endDate != null && startDate == endDate
-                    ? isSameDate(e.date, startDate!)
+                  final matchesRange =
+                    (start == null && end == null) ||
 
-                    : (startDate != null && endDate != null
-                        ? (
-                            (isSameDate(e.date, startDate!) || isSameDate(e.date, endDate!)) ||
-                            (e.date.isAfter(startDate!) && e.date.isBefore(endDate!))
-                          )
-                        : true
-                      )
-                  );
+                    // Only start selected (single date)
+                    (start != null && end == null && expenseDate == start) ||
+
+                    // Only end selected (rare case)
+                    (start == null && end != null && expenseDate == end) ||
+
+                    // Range selected
+                    (start != null && end != null &&
+                        !expenseDate.isBefore(start) &&
+                        !expenseDate.isAfter(end));
 
                     return matchesSearch &&
                             matchesCategory &&
@@ -199,11 +207,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   }
 
                   if (filteredExpenses.isEmpty) {
-                    return const Center(
-                      child: Text(
-                        "No matching results",
-                        style: TextStyle(color: Colors.grey),
-                      ),
+                    return Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(Icons.search_off, size: 60, color: Colors.grey),
+                        SizedBox(height: 12),
+                        Text(
+                          "No matching results",
+                          style: TextStyle(color: Colors.grey, fontSize: 16),
+                        ),
+                      ],
                     );
                   }
 
