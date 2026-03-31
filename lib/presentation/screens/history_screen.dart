@@ -115,21 +115,23 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         (e.date.year == selectedMonth!.year &&
                         e.date.month == selectedMonth!.month);
 
+                  bool isSameDate(DateTime a, DateTime b) {
+                    return a.year == b.year && a.month == b.month && a.day == b.day;
+                  }
+
                   final matchesRange = (startDate == null && endDate == null) ||
 
-                    // 🔥 SINGLE DATE CASE
-                    (startDate != null && endDate != null && startDate == endDate
-                      ? (e.date.year == startDate!.year &&
-                        e.date.month == startDate!.month &&
-                        e.date.day == startDate!.day)
+                  (startDate != null && endDate != null && startDate == endDate
+                    ? isSameDate(e.date, startDate!)
 
-                      // 🔥 RANGE CASE (INCLUSIVE)
-                      : (startDate != null && endDate != null
-                          ? (e.date.isAfter(startDate!.subtract(const Duration(days: 1))) &&
-                            e.date.isBefore(endDate!.add(const Duration(days: 1))))
-                          : true
-                        )
-                    );
+                    : (startDate != null && endDate != null
+                        ? (
+                            (isSameDate(e.date, startDate!) || isSameDate(e.date, endDate!)) ||
+                            (e.date.isAfter(startDate!) && e.date.isBefore(endDate!))
+                          )
+                        : true
+                      )
+                  );
 
                     return matchesSearch &&
                             matchesCategory &&
