@@ -20,6 +20,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   String selectedFilter = "Month"; // default
   DateTime? startDate;
   DateTime? endDate;
+  int? selectedMonth;
+  int? selectedYear;
 
   final List<Color> pieColors = [
     Colors.blue,
@@ -156,15 +158,26 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 children: [
                   buildFilterCard(),
                   const SizedBox(height: 8),
-                  buildTopCard(total),
-                  const SizedBox(height: 8),
-                  buildTopCategoryCard(topCategory, max, percent),
-                  const SizedBox(height: 8),
-                  buildPieChart(categoryMap),
-                  const SizedBox(height: 8),
-                  buildCategoryBreakdown(categoryMap),
+
+                  if (filteredExpenses.isEmpty) ...[
+                    const SizedBox(height: 80),
+                    const Icon(Icons.search_off, size: 60, color: Colors.white38),
+                    const SizedBox(height: 10),
+                    const Text(
+                      "No matching results",
+                      style: TextStyle(color: Colors.white70, fontSize: 16),
+                    ),
+                  ] else ...[
+                    buildTopCard(total),
+                    const SizedBox(height: 8),
+                    buildTopCategoryCard(topCategory, max, percent),
+                    const SizedBox(height: 8),
+                    buildPieChart(categoryMap),
+                    const SizedBox(height: 8),
+                    buildCategoryBreakdown(categoryMap),
+                  ],
                 ],
-              ),
+              )
             ),
           );
         },
@@ -588,34 +601,123 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
                     /// SELECT MONTH (ANY MONTH)
                     if (e == "Select Month") {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: now,
-                        firstDate: DateTime(2020),
-                        lastDate: now,
-                        initialDatePickerMode: DatePickerMode.year,
-                      );
+                      final now = DateTime.now();
 
-                      if (picked != null) {
-                        startDate = DateTime(picked.year, picked.month, 1);
-                        endDate = DateTime(picked.year, picked.month + 1, 0);
-                      }
+                      int tempMonth = now.month;
+                      int tempYear = now.year;
+
+                      await showDialog(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            backgroundColor: const Color(0xFF1E1E1E),
+                            title: const Text("Select Month", style: TextStyle(color: Colors.white)),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                DropdownButton<int>(
+                                  value: tempMonth,
+                                  dropdownColor: Colors.black,
+                                  items: List.generate(12, (i) {
+                                    return DropdownMenuItem(
+                                      value: i + 1,
+                                      child: Text(
+                                        DateFormat.MMMM().format(DateTime(0, i + 1)),
+                                        style: const TextStyle(color: Colors.white),
+                                      ),
+                                    );
+                                  }),
+                                  onChanged: (val) {
+                                    tempMonth = val!;
+                                  },
+                                ),
+                                DropdownButton<int>(
+                                  value: tempYear,
+                                  dropdownColor: Colors.black,
+                                  items: List.generate(10, (i) {
+                                    int year = now.year - i;
+                                    return DropdownMenuItem(
+                                      value: year,
+                                      child: Text("$year", style: const TextStyle(color: Colors.white)),
+                                    );
+                                  }),
+                                  onChanged: (val) {
+                                    tempYear = val!;
+                                  },
+                                ),
+                              ],
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                                child: const Text("Cancel"),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  selectedMonth = tempMonth;
+                                  selectedYear = tempYear;
+
+                                  startDate = DateTime(tempYear, tempMonth, 1);
+                                  endDate = DateTime(tempYear, tempMonth + 1, 0);
+
+                                  Navigator.pop(context);
+                                },
+                                child: const Text("OK"),
+                              ),
+                            ],
+                          );
+                        },
+                      );
                     }
 
                     /// SELECT YEAR (ANY YEAR)
                     if (e == "Select Year") {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: now,
-                        firstDate: DateTime(2020),
-                        lastDate: now,
-                        initialDatePickerMode: DatePickerMode.year,
-                      );
+                      final now = DateTime.now();
 
-                      if (picked != null) {
-                        startDate = DateTime(picked.year, 1, 1);
-                        endDate = DateTime(picked.year, 12, 31);
-                      }
+                      int tempYear = now.year;
+
+                      await showDialog(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            backgroundColor: const Color(0xFF1E1E1E),
+                            title: const Text("Select Year", style: TextStyle(color: Colors.white)),
+                            content: DropdownButton<int>(
+                              value: tempYear,
+                              dropdownColor: Colors.black,
+                              items: List.generate(10, (i) {
+                                int year = now.year - i;
+                                return DropdownMenuItem(
+                                  value: year,
+                                  child: Text("$year", style: const TextStyle(color: Colors.white)),
+                                );
+                              }),
+                              onChanged: (val) {
+                                tempYear = val!;
+                              },
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text("Cancel"),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  selectedYear = tempYear;
+
+                                  startDate = DateTime(tempYear, 1, 1);
+                                  endDate = DateTime(tempYear, 12, 31);
+
+                                  Navigator.pop(context);
+                                },
+                                child: const Text("OK"),
+                              ),
+                            ],
+                          );
+                        },
+                      );
                     }
 
                     /// CUSTOM WEEK (INSIDE ANY MONTH)
