@@ -32,25 +32,54 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   ];
 
   IconData _getFilterIcon(String value) {
-  switch (value) {
-    case "Today":
-      return Icons.today;
-    case "Week":
-      return Icons.view_week;
-    case "Month":
-      return Icons.calendar_month;
-    case "Year":
-      return Icons.date_range;
-    case "Single Date":
-      return Icons.event;
-    case "Date Range":
-      return Icons.timeline;
-    case "All Time":
-      return Icons.all_inclusive;
-    default:
-      return Icons.filter_list;
+    switch (value) {
+      case "Today":
+        return Icons.today;
+      case "Select Week (Custom)":
+        return Icons.view_week;
+      case "Select Month":
+        return Icons.calendar_month;
+      case "Select Year":
+        return Icons.date_range;
+      case "Single Date":
+        return Icons.event;
+      case "Date Range":
+        return Icons.timeline;
+      case "All Time":
+        return Icons.all_inclusive;
+      default:
+        return Icons.filter_list;
+    }
   }
-}
+
+  String getFilterDisplayText() {
+    if (startDate == null && endDate == null) {
+      return "All Time";
+    }
+
+    if (startDate != null && endDate != null) {
+      // Same day
+      if (startDate == endDate) {
+        return DateFormat("dd MMM yyyy").format(startDate!);
+      }
+
+      // Same month
+      if (startDate!.month == endDate!.month &&
+          startDate!.year == endDate!.year) {
+        return DateFormat("MMM yyyy").format(startDate!);
+      }
+
+      // Same year
+      if (startDate!.year == endDate!.year) {
+        return "${DateFormat("MMM").format(startDate!)} - ${DateFormat("MMM yyyy").format(endDate!)}";
+      }
+
+      // Full range
+      return "${DateFormat("dd MMM yyyy").format(startDate!)} - ${DateFormat("dd MMM yyyy").format(endDate!)}";
+    }
+
+    return selectedFilter;
+  }
   
 
   @override
@@ -84,33 +113,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           return (d.isAfter(startDate!.subtract(const Duration(days: 1))) &&
                   d.isBefore(endDate!.add(const Duration(days: 1))));
         }).toList();
-
-        if (filteredExpenses.isEmpty) {
-          return Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Color(0xFF0f2027),
-                  Color(0xFF203a43),
-                  Color(0xFF2c5364),
-                ],
-              ),
-            ),
-            child: const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.search_off, size: 60, color: Colors.white38),
-                  SizedBox(height: 10),
-                  Text(
-                    "No matching results",
-                    style: TextStyle(color: Colors.white70, fontSize: 16),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
 
           double total = 0;
           Map<String, double> categoryMap = {};
@@ -163,9 +165,14 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     const SizedBox(height: 80),
                     const Icon(Icons.search_off, size: 60, color: Colors.white38),
                     const SizedBox(height: 10),
-                    const Text(
-                      "No matching results",
-                      style: TextStyle(color: Colors.white70, fontSize: 16),
+                    Text(
+                      "No data for ${getFilterDisplayText()}",
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ] else ...[
                     buildTopCard(total),
@@ -539,7 +546,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       Icon(_getFilterIcon(selectedFilter), color: Colors.white70),
                       const SizedBox(width: 10),
                       Text(
-                        selectedFilter,
+                        getFilterDisplayText(),
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w500,
