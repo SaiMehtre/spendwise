@@ -12,6 +12,12 @@ class CategoryUtils {
         return Colors.purple;
       case "Bills":
         return Colors.red;
+      case "Health":
+        return Colors.teal;
+      case "Grocery":
+        return Colors.green;
+      case "Entertainment":
+        return Colors.pink;
       default:
         return Colors.grey;
     }
@@ -27,6 +33,12 @@ class CategoryUtils {
         return Icons.shopping_bag;
       case "Bills":
         return Icons.receipt;
+      case "Health":
+        return Icons.local_hospital;
+      case "Grocery":
+        return Icons.local_grocery_store;
+      case "Entertainment":
+        return Icons.movie;
       default:
         return Icons.category;
     }

@@ -17,7 +17,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   final _amountController = TextEditingController();
   final _noteController = TextEditingController();
   String? selectedCategory;
-  final List<String> categories = ["Food", "Travel", "Shopping", "Bills", "Others"];
+  final List<String> categories = ["Food", "Travel", "Shopping", "Bills", "Health", "Grocery", "Entertainment", "Others"];
 
   // ✅ Form key for validation
   final _formKey = GlobalKey<FormState>();

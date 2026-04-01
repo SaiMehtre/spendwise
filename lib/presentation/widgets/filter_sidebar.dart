@@ -84,7 +84,7 @@ class FilterSideBar extends StatelessWidget {
               const SizedBox(height: 20),
 
               /// CATEGORY
-              const Text("Category", style: TextStyle(color: Colors.white70)),
+              const Text("Category", style: TextStyle(color: Colors.white70,fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
 
               Container(
@@ -99,7 +99,7 @@ class FilterSideBar extends StatelessWidget {
                   dropdownColor: Colors.black,
                   isExpanded: true,
                   underline: const SizedBox(),
-                  items: ['All', 'Food', 'Travel', 'Shopping', 'Bills', 'Other']
+                  items: ['All', 'Food', 'Travel', 'Shopping', 'Bills', "Health", "Grocery", "Entertainment", 'Other']
                       .map((cat) => DropdownMenuItem(
                             value: cat,
                             child: Text(cat,
@@ -116,7 +116,7 @@ class FilterSideBar extends StatelessWidget {
               const SizedBox(height: 20),
 
               /// MONTH
-              const Text("Month", style: TextStyle(color: Colors.white70)),
+              const Text("Month", style: TextStyle(color: Colors.white70,fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
 
               Container(
@@ -168,7 +168,7 @@ class FilterSideBar extends StatelessWidget {
               const SizedBox(height: 20),
 
               /// QUICK FILTERS
-              const Text("Date Filter", style: TextStyle(color: Colors.white70)),
+              const Text("Date Filter", style: TextStyle(color: Colors.white70,fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
 
               Container(
@@ -181,7 +181,7 @@ class FilterSideBar extends StatelessWidget {
                 child: DropdownButton<String>(
                   value: null,
                   hint: const Text(
-                    "Select Date Filter",
+                    "Select Date Wise",
                     style: TextStyle(color: Colors.white54),
                   ),
                   dropdownColor: Colors.black,
@@ -265,6 +265,7 @@ class FilterSideBar extends StatelessWidget {
                   child: const Text(
                     "Clear Filters",
                     style: TextStyle(
+                      color: Colors.white70,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1,
                     ),

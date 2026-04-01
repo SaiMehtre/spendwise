@@ -6,10 +6,21 @@ import '../../core/utils/category_utils.dart';
 import 'package:intl/intl.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
-class AnalyticsScreen extends StatelessWidget {
-  AnalyticsScreen({super.key});
+class AnalyticsScreen extends StatefulWidget {
+  const AnalyticsScreen({super.key});
+
+  @override
+  State<AnalyticsScreen> createState() => _AnalyticsScreenState();
+}
+
+class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   final service = ExpenseService();
+
+  String selectedFilter = "Month"; // default
+  DateTime? startDate;
+  DateTime? endDate;
+
   final List<Color> pieColors = [
     Colors.blue,
     Colors.red,
@@ -39,9 +50,17 @@ class AnalyticsScreen extends StatelessWidget {
           final now = DateTime.now();
 
           final filteredExpenses = expenses.where((e) {
-            final d = DateTime.parse(e['date']);
-            return d.month == now.month && d.year == now.year;
-          }).toList();
+          final d = DateTime.parse(e['date']);
+
+          // 👉 All Time
+          if (startDate == null && endDate == null) {
+            return true;
+          }
+
+          // 👉 range filter
+          return (d.isAfter(startDate!.subtract(const Duration(days: 1))) &&
+                  d.isBefore(endDate!.add(const Duration(days: 1))));
+        }).toList();
 
           double total = 0;
           Map<String, double> categoryMap = {};
@@ -87,6 +106,8 @@ class AnalyticsScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
               child: Column(
                 children: [
+                  buildFilterCard(),
+                  const SizedBox(height: 8),
                   buildTopCard(total),
                   const SizedBox(height: 8),
                   buildTopCategoryCard(topCategory, max, percent),
@@ -242,58 +263,58 @@ class AnalyticsScreen extends StatelessWidget {
   }
 
   Widget buildCategoryBreakdown(Map<String, double> data) {
-    final sorted = data.entries.toList()
-  ..sort((a, b) => b.value.compareTo(a.value));
+      final sorted = data.entries.toList()
+    ..sort((a, b) => b.value.compareTo(a.value));
 
-  return Padding(
-      padding: const EdgeInsets.fromLTRB(1, 1, 1, 90), // bottom 90 extra
-      
-      child: Column(
-        children: sorted.map((entry){
-          return ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-              child: Container(
-                width: double.infinity,
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.white24),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        entry.key,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: Colors.white),
+    return Padding(
+        padding: const EdgeInsets.fromLTRB(1, 1, 1, 90), // bottom 90 extra
+        
+        child: Column(
+          children: sorted.map((entry){
+            return ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                child: Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.white24),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          entry.key,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(color: Colors.white),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    FittedBox(
-                      child: Text(
-                          NumberFormat.currency(
-                          locale: 'en_IN',
-                          symbol: '₹',
-                          decimalDigits: 2,
-                        ).format(entry.value),
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, color: Colors.white),
+                      const SizedBox(width: 8),
+                      FittedBox(
+                        child: Text(
+                            NumberFormat.currency(
+                            locale: 'en_IN',
+                            symbol: '₹',
+                            decimalDigits: 2,
+                          ).format(entry.value),
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-          );
-        }).toList(),
-      ),
-    );
-}
+            );
+          }).toList(),
+        ),
+      );
+  }
 
   List<PieChartSectionData> buildPieSections(Map<String, double> data) {
     double total = data.values.fold(0, (sum, val) => sum + val);
@@ -406,6 +427,105 @@ class AnalyticsScreen extends StatelessWidget {
                 }).toList(),
               )
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildFilterCard() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white24),
+          ),
+          child: DropdownButton<String>(
+            value: selectedFilter,
+            dropdownColor: Colors.black,
+            isExpanded: true,
+            underline: const SizedBox(),
+            items: [
+              "Today",
+              "Week",
+              "Month",
+              "Year",
+              "Single Date",
+              "Date Range",
+              "All Time"
+            ].map((e) {
+              return DropdownMenuItem(
+                value: e,
+                child: Text(e,
+                    style: const TextStyle(color: Colors.white)),
+              );
+            }).toList(),
+            onChanged: (value) async {
+              setState(() {
+                selectedFilter = value!;
+              });
+
+              final now = DateTime.now();
+
+              if (value == "Today") {
+                startDate = now;
+                endDate = now;
+              }
+
+              if (value == "Week") {
+                startDate = now.subtract(const Duration(days: 6));
+                endDate = now;
+              }
+
+              if (value == "Month") {
+                startDate = DateTime(now.year, now.month, 1);
+                endDate = now;
+              }
+
+              if (value == "Year") {
+                startDate = DateTime(now.year, 1, 1);
+                endDate = now;
+              }
+
+              if (value == "Single Date") {
+                final picked = await showDatePicker(
+                  context: context,
+                  initialDate: now,
+                  firstDate: DateTime(2020),
+                  lastDate: now,
+                );
+
+                if (picked != null) {
+                  startDate = picked;
+                  endDate = picked;
+                }
+              }
+
+              if (value == "Date Range") {
+                final pickedRange = await showDateRangePicker(
+                  context: context,
+                  firstDate: DateTime(2020),
+                  lastDate: now,
+                );
+
+                if (pickedRange != null) {
+                  startDate = pickedRange.start;
+                  endDate = pickedRange.end;
+                }
+              }
+
+              if (value == "All Time") {
+                startDate = null;
+                endDate = null;
+              }
+
+              setState(() {});
+            },
           ),
         ),
       ),
