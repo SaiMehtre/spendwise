@@ -34,7 +34,7 @@ class FilterSideBar extends StatelessWidget {
     return Material(
   color: Colors.transparent,
   child: Padding(
-    padding: const EdgeInsets.only(top: 70), // 👈 adjust based on search bar height
+    padding: const EdgeInsets.only(top: 70), // adjust based on search bar height
     child: Align(
       alignment: Alignment.topRight,
       child: Container(

@@ -28,6 +28,27 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     Colors.orange,
     Colors.purple,
   ];
+
+  IconData _getFilterIcon(String value) {
+  switch (value) {
+    case "Today":
+      return Icons.today;
+    case "Week":
+      return Icons.view_week;
+    case "Month":
+      return Icons.calendar_month;
+    case "Year":
+      return Icons.date_range;
+    case "Single Date":
+      return Icons.event;
+    case "Date Range":
+      return Icons.timeline;
+    case "All Time":
+      return Icons.all_inclusive;
+    default:
+      return Icons.filter_list;
+  }
+}
   
 
   @override
@@ -445,26 +466,64 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: Colors.white24),
           ),
-          child: DropdownButton<String>(
-            value: selectedFilter,
-            dropdownColor: Colors.black,
-            isExpanded: true,
-            underline: const SizedBox(),
-            items: [
-              "Today",
-              "Week",
-              "Month",
-              "Year",
-              "Single Date",
-              "Date Range",
-              "All Time"
-            ].map((e) {
-              return DropdownMenuItem(
-                value: e,
-                child: Text(e,
-                    style: const TextStyle(color: Colors.white)),
-              );
-            }).toList(),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.white.withOpacity(0.15),
+                  Colors.white.withOpacity(0.05),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.white24),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: selectedFilter,
+                dropdownColor: const Color(0xFF1E1E1E),
+                borderRadius: BorderRadius.circular(14),
+                icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white70),
+                isExpanded: true,
+                items: [
+                  "Today",
+                  "Week",
+                  "Month",
+                  "Year",
+                  "Single Date",
+                  "Date Range",
+                  "All Time"
+                ].map((e) {
+                  return DropdownMenuItem(
+                    value: e,
+                    child: Row(
+                      children: [
+                        Icon(
+                          _getFilterIcon(e),
+                          size: 18,
+                          color: Colors.white70,
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          e,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
             onChanged: (value) async {
               setState(() {
                 selectedFilter = value!;
@@ -526,6 +585,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
               setState(() {});
             },
+          ),
+            ),
           ),
         ),
       ),
