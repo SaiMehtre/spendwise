@@ -465,131 +465,158 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             color: Colors.white.withOpacity(0.1),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: Colors.white24),
-          ),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.white.withOpacity(0.15),
-                  Colors.white.withOpacity(0.05),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Colors.white24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
+          ),          
+          child: GestureDetector(
+            onTap: _openFilterDialog,
+            behavior: HitTestBehavior.opaque, 
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14), 
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.white.withOpacity(0.15),
+                    Colors.white.withOpacity(0.05),
+                  ],
                 ),
-              ],
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: selectedFilter,
-                dropdownColor: const Color(0xFF1E1E1E),
                 borderRadius: BorderRadius.circular(14),
-                icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white70),
-                isExpanded: true,
-                items: [
-                  "Today",
-                  "Week",
-                  "Month",
-                  "Year",
-                  "Single Date",
-                  "Date Range",
-                  "All Time"
-                ].map((e) {
-                  return DropdownMenuItem(
-                    value: e,
-                    child: Row(
-                      children: [
-                        Icon(
-                          _getFilterIcon(e),
-                          size: 18,
-                          color: Colors.white70,
+                border: Border.all(color: Colors.white24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Icon(_getFilterIcon(selectedFilter), color: Colors.white70),
+                      const SizedBox(width: 10),
+                      Text(
+                        selectedFilter,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
                         ),
-                        const SizedBox(width: 10),
-                        Text(
-                          e,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
-            onChanged: (value) async {
-              setState(() {
-                selectedFilter = value!;
-              });
-
-              final now = DateTime.now();
-
-              if (value == "Today") {
-                startDate = now;
-                endDate = now;
-              }
-
-              if (value == "Week") {
-                startDate = now.subtract(const Duration(days: 6));
-                endDate = now;
-              }
-
-              if (value == "Month") {
-                startDate = DateTime(now.year, now.month, 1);
-                endDate = now;
-              }
-
-              if (value == "Year") {
-                startDate = DateTime(now.year, 1, 1);
-                endDate = now;
-              }
-
-              if (value == "Single Date") {
-                final picked = await showDatePicker(
-                  context: context,
-                  initialDate: now,
-                  firstDate: DateTime(2020),
-                  lastDate: now,
-                );
-
-                if (picked != null) {
-                  startDate = picked;
-                  endDate = picked;
-                }
-              }
-
-              if (value == "Date Range") {
-                final pickedRange = await showDateRangePicker(
-                  context: context,
-                  firstDate: DateTime(2020),
-                  lastDate: now,
-                );
-
-                if (pickedRange != null) {
-                  startDate = pickedRange.start;
-                  endDate = pickedRange.end;
-                }
-              }
-
-              if (value == "All Time") {
-                startDate = null;
-                endDate = null;
-              }
-
-              setState(() {});
-            },
-          ),
+                      ),
+                    ],
+                  ),
+                  const Icon(Icons.keyboard_arrow_down, color: Colors.white70),
+                ],
+              ),
             ),
-          ),
+          )
+          
         ),
       ),
     );
   }
+
+  void _openFilterDialog() {
+  showDialog(
+    context: context,
+    builder: (context) {
+      return Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [
+                Color(0xFF0F2027),
+                Color(0xFF203A43),
+                Color(0xFF2C5364),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ...[
+                "Today",
+                "Week",
+                "Month",
+                "Year",
+                "Single Date",
+                "Date Range",
+                "All Time"
+              ].map((e) {
+                return ListTile(
+                  leading: Icon(_getFilterIcon(e), color: Colors.white70),
+                  title: Text(e, style: const TextStyle(color: Colors.white)),
+                  onTap: () async {
+                    final now = DateTime.now();
+
+                    setState(() {
+                      selectedFilter = e;
+                    });
+
+                    if (e == "Today") {
+                      startDate = now;
+                      endDate = now;
+                    }
+
+                    if (e == "Week") {
+                      startDate = now.subtract(const Duration(days: 6));
+                      endDate = now;
+                    }
+
+                    if (e == "Month") {
+                      startDate = DateTime(now.year, now.month, 1);
+                      endDate = now;
+                    }
+
+                    if (e == "Year") {
+                      startDate = DateTime(now.year, 1, 1);
+                      endDate = now;
+                    }
+
+                    if (e == "Single Date") {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: now,
+                        firstDate: DateTime(2020),
+                        lastDate: now,
+                      );
+
+                      if (picked != null) {
+                        startDate = picked;
+                        endDate = picked;
+                      }
+                    }
+
+                    if (e == "Date Range") {
+                      final pickedRange = await showDateRangePicker(
+                        context: context,
+                        firstDate: DateTime(2020),
+                        lastDate: now,
+                      );
+
+                      if (pickedRange != null) {
+                        startDate = pickedRange.start;
+                        endDate = pickedRange.end;
+                      }
+                    }
+
+                    if (e == "All Time") {
+                      startDate = null;
+                      endDate = null;
+                    }
+
+                    Navigator.pop(context); 
+                  },
+                );
+              }).toList(),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
 }
