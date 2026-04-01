@@ -80,6 +80,26 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
     return selectedFilter;
   }
+
+  String getWeeklyInsightSimple(List expenses) {
+    if (startDate == null || endDate == null) return "";
+
+    double total = 0;
+
+    for (var e in expenses) {
+      final d = DateTime.parse(e['date']);
+      final amount = e['amount'];
+
+      if (d.isAfter(startDate!.subtract(const Duration(days: 1))) &&
+          d.isBefore(endDate!.add(const Duration(days: 1)))) {
+        total += amount;
+      }
+    }
+
+    if (total == 0) return "No spending this week 🧘";
+
+    return "You spent ₹${total.toStringAsFixed(0)} this week 💸";
+  }
   
 
   @override
@@ -179,7 +199,35 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     const SizedBox(height: 8),
                     buildTopCategoryCard(topCategory, max, percent),
                     const SizedBox(height: 8),
-                    buildPieChart(categoryMap),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 500),
+                      transitionBuilder: (child, animation) {
+                        return FadeTransition(
+                          opacity: animation,
+                          child: ScaleTransition(scale: animation, child: child),
+                        );
+                      },
+                      child: buildPieChart(
+                        categoryMap,
+                        key: ValueKey(startDate.toString() + endDate.toString()), // 🔥 IMPORTANT
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 400),
+                      child: selectedFilter == "Select Week (Custom)"
+                      ? Text(
+                          getWeeklyInsightSimple(expenses),
+                          key: ValueKey(startDate.toString() + endDate.toString() + "insight"),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        )
+                      : const SizedBox(),
+                    ),
                     const SizedBox(height: 8),
                     buildCategoryBreakdown(categoryMap),
                   ],
@@ -423,9 +471,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     }).toList();
   }
 
-  Widget buildPieChart(Map<String, double> data) {
+  Widget buildPieChart(Map<String, double> data, {Key? key}) {
     double total = data.values.fold(0, (sum, val) => sum + val);
     return ClipRRect(
+      key: key,
       borderRadius: BorderRadius.circular(16),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
@@ -502,7 +551,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   Widget buildFilterCard() {
-
     
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
@@ -610,70 +658,101 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     if (e == "Select Month") {
                       final now = DateTime.now();
 
-                      int tempMonth = now.month;
-                      int tempYear = now.year;
+                      int tempMonth = startDate?.month ?? now.month;
+                      int tempYear = startDate?.year ?? now.year;
 
                       await showDialog(
                         context: context,
                         builder: (context) {
-                          return AlertDialog(
-                            backgroundColor: const Color(0xFF1E1E1E),
-                            title: const Text("Select Month", style: TextStyle(color: Colors.white)),
-                            content: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                DropdownButton<int>(
-                                  value: tempMonth,
-                                  dropdownColor: Colors.black,
-                                  items: List.generate(12, (i) {
-                                    return DropdownMenuItem(
-                                      value: i + 1,
-                                      child: Text(
-                                        DateFormat.MMMM().format(DateTime(0, i + 1)),
-                                        style: const TextStyle(color: Colors.white),
-                                      ),
-                                    );
-                                  }),
-                                  onChanged: (val) {
-                                    tempMonth = val!;
-                                  },
+                          return StatefulBuilder(
+                            builder: (context, setStateDialog) {
+                              return AlertDialog(
+                                backgroundColor: const Color(0xFF1E1E1E),
+                                title: const Text(
+                                  "Select Month",
+                                  style: TextStyle(color: Colors.white),
                                 ),
-                                DropdownButton<int>(
-                                  value: tempYear,
-                                  dropdownColor: Colors.black,
-                                  items: List.generate(10, (i) {
-                                    int year = now.year - i;
-                                    return DropdownMenuItem(
-                                      value: year,
-                                      child: Text("$year", style: const TextStyle(color: Colors.white)),
-                                    );
-                                  }),
-                                  onChanged: (val) {
-                                    tempYear = val!;
-                                  },
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+
+                                    /// 🔥 MONTH DROPDOWN
+                                    DropdownButton<int>(
+                                      value: tempMonth,
+                                      dropdownColor: Colors.black,
+                                      isExpanded: true,
+                                      items: List.generate(12, (i) {
+                                        return DropdownMenuItem(
+                                          value: i + 1,
+                                          child: Text(
+                                            DateFormat.MMMM().format(DateTime(0, i + 1)),
+                                            style: const TextStyle(color: Colors.white),
+                                          ),
+                                        );
+                                      }),
+                                      onChanged: (val) {
+                                        setStateDialog(() {
+                                          tempMonth = val!;
+                                        });
+                                      },
+                                    ),
+
+                                    const SizedBox(height: 10),
+
+                                    /// 🔥 YEAR DROPDOWN
+                                    DropdownButton<int>(
+                                      value: tempYear,
+                                      dropdownColor: Colors.black,
+                                      isExpanded: true,
+                                      items: List.generate(10, (i) {
+                                        int year = now.year - i;
+                                        return DropdownMenuItem(
+                                          value: year,
+                                          child: Text(
+                                            "$year",
+                                            style: const TextStyle(color: Colors.white),
+                                          ),
+                                        );
+                                      }),
+                                      onChanged: (val) {
+                                        setStateDialog(() {
+                                          tempYear = val!;
+                                        });
+                                      },
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                },
-                                child: const Text("Cancel"),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  selectedMonth = tempMonth;
-                                  selectedYear = tempYear;
 
-                                  startDate = DateTime(tempYear, tempMonth, 1);
-                                  endDate = DateTime(tempYear, tempMonth + 1, 0);
+                                actions: [
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                    },
+                                    child: const Text(
+                                      "Cancel",
+                                      style: TextStyle(color: Colors.white70),
+                                    ),
+                                  ),
 
-                                  Navigator.pop(context);
-                                },
-                                child: const Text("OK"),
-                              ),
-                            ],
+                                  TextButton(
+                                    onPressed: () {
+                                      selectedMonth = tempMonth;
+                                      selectedYear = tempYear;
+
+                                      startDate = DateTime(tempYear, tempMonth, 1);
+                                      endDate = DateTime(tempYear, tempMonth + 1, 0);
+
+                                      setState(() {}); // 🔥 important refresh
+                                      Navigator.pop(context);
+                                    },
+                                    child: const Text(
+                                      "OK",
+                                      style: TextStyle(color: Colors.blue),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
                           );
                         },
                       );
@@ -683,45 +762,70 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     if (e == "Select Year") {
                       final now = DateTime.now();
 
-                      int tempYear = now.year;
+                      int tempYear = startDate?.year ?? now.year;
 
                       await showDialog(
                         context: context,
                         builder: (context) {
-                          return AlertDialog(
-                            backgroundColor: const Color(0xFF1E1E1E),
-                            title: const Text("Select Year", style: TextStyle(color: Colors.white)),
-                            content: DropdownButton<int>(
-                              value: tempYear,
-                              dropdownColor: Colors.black,
-                              items: List.generate(10, (i) {
-                                int year = now.year - i;
-                                return DropdownMenuItem(
-                                  value: year,
-                                  child: Text("$year", style: const TextStyle(color: Colors.white)),
-                                );
-                              }),
-                              onChanged: (val) {
-                                tempYear = val!;
-                              },
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: const Text("Cancel"),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  selectedYear = tempYear;
+                          return StatefulBuilder(
+                            builder: (context, setStateDialog) {
+                              return AlertDialog(
+                                backgroundColor: const Color(0xFF1E1E1E),
+                                title: const Text(
+                                  "Select Year",
+                                  style: TextStyle(color: Colors.white),
+                                ),
 
-                                  startDate = DateTime(tempYear, 1, 1);
-                                  endDate = DateTime(tempYear, 12, 31);
+                                content: DropdownButton<int>(
+                                  value: tempYear,
+                                  dropdownColor: Colors.black,
+                                  isExpanded: true,
+                                  items: List.generate(10, (i) {
+                                    int year = now.year - i;
+                                    return DropdownMenuItem(
+                                      value: year,
+                                      child: Text(
+                                        "$year",
+                                        style: const TextStyle(color: Colors.white),
+                                      ),
+                                    );
+                                  }),
 
-                                  Navigator.pop(context);
-                                },
-                                child: const Text("OK"),
-                              ),
-                            ],
+                                  /// 🔥 FIX HERE
+                                  onChanged: (val) {
+                                    setStateDialog(() {
+                                      tempYear = val!;
+                                    });
+                                  },
+                                ),
+
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text(
+                                      "Cancel",
+                                      style: TextStyle(color: Colors.white70),
+                                    ),
+                                  ),
+
+                                  TextButton(
+                                    onPressed: () {
+                                      selectedYear = tempYear;
+
+                                      startDate = DateTime(tempYear, 1, 1);
+                                      endDate = DateTime(tempYear, 12, 31);
+
+                                      setState(() {}); // 🔥 refresh main UI
+                                      Navigator.pop(context);
+                                    },
+                                    child: const Text(
+                                      "OK",
+                                      style: TextStyle(color: Colors.blue),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
                           );
                         },
                       );
@@ -729,16 +833,165 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
                     /// CUSTOM WEEK (INSIDE ANY MONTH)
                     if (e == "Select Week (Custom)") {
-                      final pickedRange = await showDateRangePicker(
-                        context: context,
-                        firstDate: DateTime(2020),
-                        lastDate: now,
-                      );
+                      final now = DateTime.now();
 
-                      if (pickedRange != null) {
-                        startDate = pickedRange.start;
-                        endDate = pickedRange.end;
-                      }
+                      int tempMonth = startDate?.month ?? now.month;
+                      int tempYear = startDate?.year ?? now.year;
+                      int tempWeekIndex = 0;
+
+                      await showDialog(
+                        context: context,
+                        builder: (context) {
+                          return StatefulBuilder(
+                            builder: (context, setStateDialog) {
+
+                              /// 🔥 GET ALL ISO WEEKS (MON-SUN)
+                              List<Map<String, DateTime>> getWeeks(int year, int month) {
+                                List<Map<String, DateTime>> weeks = [];
+
+                                DateTime firstDay = DateTime(year, month, 1);
+                                DateTime lastDay = DateTime(year, month + 1, 0);
+
+                                // first Monday before or equal to first day
+                                DateTime current = firstDay.subtract(
+                                  Duration(days: firstDay.weekday - 1),
+                                );
+
+                                while (current.isBefore(lastDay) || current.isAtSameMomentAs(lastDay)) {
+                                  DateTime weekStart = current;
+                                  DateTime weekEnd = current.add(const Duration(days: 6));
+
+                                  weeks.add({
+                                    "start": weekStart,
+                                    "end": weekEnd,
+                                  });
+
+                                  current = current.add(const Duration(days: 7));
+                                }
+
+                                return weeks;
+                              }
+
+                              List<Map<String, DateTime>> weeks =
+                                  getWeeks(tempYear, tempMonth);
+
+                              return AlertDialog(
+                                backgroundColor: const Color(0xFF1E1E1E),
+                                title: const Text(
+                                  "Select Week (Mon - Sun)",
+                                  style: TextStyle(color: Colors.white),
+                                ),
+
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+
+                                    /// 🔥 MONTH
+                                    DropdownButton<int>(
+                                      value: tempMonth,
+                                      isExpanded: true,
+                                      dropdownColor: Colors.black,
+                                      items: List.generate(12, (i) {
+                                        return DropdownMenuItem(
+                                          value: i + 1,
+                                          child: Text(
+                                            DateFormat.MMMM().format(DateTime(0, i + 1)),
+                                            style: const TextStyle(color: Colors.white),
+                                          ),
+                                        );
+                                      }),
+                                      onChanged: (val) {
+                                        setStateDialog(() {
+                                          tempMonth = val!;
+                                          tempWeekIndex = 0;
+                                        });
+                                      },
+                                    ),
+
+                                    const SizedBox(height: 10),
+
+                                    /// 🔥 YEAR
+                                    DropdownButton<int>(
+                                      value: tempYear,
+                                      isExpanded: true,
+                                      dropdownColor: Colors.black,
+                                      items: List.generate(10, (i) {
+                                        int year = now.year - i;
+                                        return DropdownMenuItem(
+                                          value: year,
+                                          child: Text(
+                                            "$year",
+                                            style: const TextStyle(color: Colors.white),
+                                          ),
+                                        );
+                                      }),
+                                      onChanged: (val) {
+                                        setStateDialog(() {
+                                          tempYear = val!;
+                                          tempWeekIndex = 0;
+                                        });
+                                      },
+                                    ),
+
+                                    const SizedBox(height: 10),
+
+                                    /// 🔥 ISO WEEK SELECTOR
+                                    DropdownButton<int>(
+                                      value: tempWeekIndex,
+                                      isExpanded: true,
+                                      dropdownColor: Colors.black,
+                                      items: List.generate(weeks.length, (i) {
+                                        DateTime start = weeks[i]["start"]!;
+                                        DateTime end = weeks[i]["end"]!;
+
+                                        return DropdownMenuItem(
+                                          value: i,
+                                          child: Text(
+                                            "${DateFormat('dd MMM').format(start)} - ${DateFormat('dd MMM').format(end)}",
+                                            style: const TextStyle(color: Colors.white),
+                                          ),
+                                        );
+                                      }),
+                                      onChanged: (val) {
+                                        setStateDialog(() {
+                                          tempWeekIndex = val!;
+                                        });
+                                      },
+                                    ),
+                                  ],
+                                ),
+
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text(
+                                      "Cancel",
+                                      style: TextStyle(color: Colors.white70),
+                                    ),
+                                  ),
+
+                                  TextButton(
+                                    onPressed: () {
+                                      DateTime start = weeks[tempWeekIndex]["start"]!;
+                                      DateTime end = weeks[tempWeekIndex]["end"]!;
+
+                                      startDate = start;
+                                      endDate = end;
+
+                                      setState(() {});
+                                      Navigator.pop(context);
+                                    },
+                                    child: const Text(
+                                      "OK",
+                                      style: TextStyle(color: Colors.blue),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                      );
                     }
 
                     /// SINGLE DATE

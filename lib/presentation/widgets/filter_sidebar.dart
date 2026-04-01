@@ -1,5 +1,31 @@
 import 'package:flutter/material.dart';
 import 'filter_bottom_sheet.dart';
+import '../../core/utils/category_utils.dart';
+
+BoxDecoration premiumBoxDecoration() {
+  return BoxDecoration(
+    gradient: LinearGradient(
+      colors: [
+        Colors.white.withOpacity(0.15),
+        Colors.white.withOpacity(0.05),
+      ],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    ),
+    borderRadius: BorderRadius.circular(16), // ✅ more premium
+    border: Border.all(
+      color: Colors.white.withOpacity(0.3), // ✅ stronger border
+      width: 1.2,
+    ),
+    boxShadow: [
+      BoxShadow(
+        color: Colors.black.withOpacity(0.5),
+        blurRadius: 12,
+        offset: const Offset(0, 6),
+      ),
+    ],
+  );
+}
 
 class FilterSideBar extends StatelessWidget {
   final String selectedCategory;
@@ -89,27 +115,38 @@ class FilterSideBar extends StatelessWidget {
 
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.white24),
-                ),
-                child: DropdownButton<String>(
-                  value: selectedCategory, // month ke liye change karna
-                  dropdownColor: Colors.black,
-                  isExpanded: true,
-                  underline: const SizedBox(),
-                  items: ['All', 'Food', 'Travel', 'Shopping', 'Bills', "Health", "Grocery", "Entertainment", 'Other']
-                      .map((cat) => DropdownMenuItem(
-                            value: cat,
-                            child: Text(cat,
-                                style: const TextStyle(color: Colors.white)),
-                          ))
-                      .toList(),
-                  onChanged: (value) {
-                    onCategoryChanged(value!);
-                    Navigator.pop(context);
-                  },
+                decoration: premiumBoxDecoration(),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: selectedCategory,
+                    dropdownColor: const Color(0xFF1E1E1E),
+                    borderRadius: BorderRadius.circular(16), // ✅ popup radius
+                    icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white70),
+                    isExpanded: true,
+                    items: ['All', 'Food', 'Travel', 'Shopping', 'Bills', "Health", "Grocery", "Entertainment", 'Other']
+                        .map((cat) => DropdownMenuItem(
+                              value: cat,
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    cat == "All"
+                                        ? Icons.all_inclusive
+                                        : CategoryUtils.getIcon(cat), // ✅ utils icon
+                                    color: cat == "All"
+                                        ? Colors.white70
+                                        : CategoryUtils.getColor(cat),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Text(cat, style: const TextStyle(color: Colors.white)),
+                                ],
+                              ),
+                            ))
+                        .toList(),
+                    onChanged: (value) {
+                      onCategoryChanged(value!);
+                      Navigator.pop(context);
+                    },
+                  ),
                 ),
               ),
 
@@ -121,20 +158,24 @@ class FilterSideBar extends StatelessWidget {
 
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.white24),
-                ),
+                decoration: premiumBoxDecoration(),
+                child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     value: selectedMonthLabel,
-                    dropdownColor: Colors.black,
+                    dropdownColor: const Color(0xFF1E1E1E),
+                    borderRadius: BorderRadius.circular(16),
+                    icon: const Icon(Icons.calendar_month, color: Colors.white70),
                     isExpanded: true,
                     items: months.map((m) {
                       return DropdownMenuItem(
                         value: m,
-                        child:
+                        child: Row(
+                          children: [
+                            const Icon(Icons.event_note, color: Colors.white54),
+                            const SizedBox(width: 10),
                             Text(m, style: const TextStyle(color: Colors.white)),
+                          ],
+                        ),
                       );
                     }).toList(),
                     onChanged: (value) {
@@ -157,12 +198,12 @@ class FilterSideBar extends StatelessWidget {
                         };
 
                         final month = monthMap[value]!;
-                        onMonthChanged(
-                            DateTime(DateTime.now().year, month));
+                        onMonthChanged(DateTime(DateTime.now().year, month));
                       }
                       Navigator.pop(context);
                     },
                   ),
+                ),
               ),
 
               const SizedBox(height: 20),
@@ -173,68 +214,85 @@ class FilterSideBar extends StatelessWidget {
 
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.white24),
-                ),
-                child: DropdownButton<String>(
-                  value: null,
-                  hint: const Text(
-                    "Select Date Wise",
-                    style: TextStyle(color: Colors.white54),
+                decoration: premiumBoxDecoration(),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: null,
+                    hint: Row(
+                      children: const [
+                        Icon(Icons.insights, color: Colors.white54),
+                        SizedBox(width: 10),
+                        Text("Select Date Wise", style: TextStyle(color: Colors.white54)),
+                      ],
+                    ),
+                    dropdownColor: const Color(0xFF1E1E1E),
+                    borderRadius: BorderRadius.circular(16),
+                    icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white70),
+                    isExpanded: true,
+                    items: [
+                      {"label": "Today", "icon": Icons.today},
+                      {"label": "Last 7 Days", "icon": Icons.view_week},
+                      {"label": "Single Date", "icon": Icons.event},
+                      {"label": "Date Range", "icon": Icons.timeline},
+                    ].map<DropdownMenuItem<String>>((e) {
+                      return DropdownMenuItem<String>(
+                        value: e["label"] as String,
+                        child: Row(
+                          children: [
+                            Icon(e["icon"] as IconData, color: Colors.white70),
+                            const SizedBox(width: 10),
+                            Text(
+                              e["label"] as String,
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (value) async {
+                      final today = DateTime.now();
+
+                      if (value == "Today") {
+                        onStartDateChanged?.call(today);
+                        onEndDateChanged?.call(today);
+                      }
+
+                      if (value == "Last 7 Days") {
+                        final last7 = today.subtract(const Duration(days: 6));
+                        onStartDateChanged?.call(last7);
+                        onEndDateChanged?.call(today);
+                      }
+
+                      if (value == "Single Date") {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: today,
+                          firstDate: DateTime(2020),
+                          lastDate: today,
+                        );
+
+                        if (picked != null) {
+                          onStartDateChanged?.call(picked);
+                          onEndDateChanged?.call(picked);
+                        }
+                      }
+
+                      if (value == "Date Range") {
+                        final pickedRange = await showDateRangePicker(
+                          context: context,
+                          firstDate: DateTime(2020),
+                          lastDate: today,
+                        );
+
+                        if (pickedRange != null) {
+                          onStartDateChanged?.call(pickedRange.start);
+                          onEndDateChanged?.call(pickedRange.end);
+                        }
+                      }
+
+                      Navigator.pop(context);
+                    },
                   ),
-                  dropdownColor: Colors.black,
-                  isExpanded: true,
-                  items: ["Today", "Last 7 Days", "Single Date", "Date Range"]
-                      .map((e) => DropdownMenuItem(
-                            value: e,
-                            child: Text(e, style: const TextStyle(color: Colors.white)),
-                          ))
-                      .toList(),
-                  onChanged: (value) async {
-                    final today = DateTime.now();
-
-                    if (value == "Today") {
-                      onStartDateChanged?.call(today);
-                      onEndDateChanged?.call(today);
-                    }
-
-                    if (value == "Last 7 Days") {
-                      final last7 = today.subtract(const Duration(days: 6));
-                      onStartDateChanged?.call(last7);
-                      onEndDateChanged?.call(today);
-                    }
-
-                    if (value == "Single Date") {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: today,
-                        firstDate: DateTime(2020),
-                        lastDate: today,
-                      );
-
-                      if (picked != null) {
-                        onStartDateChanged?.call(picked);
-                        onEndDateChanged?.call(picked);
-                      }
-                    }
-
-                    if (value == "Date Range") {
-                      final pickedRange = await showDateRangePicker(
-                        context: context,
-                        firstDate: DateTime(2020),
-                        lastDate: today,
-                      );
-
-                      if (pickedRange != null) {
-                        onStartDateChanged?.call(pickedRange.start);
-                        onEndDateChanged?.call(pickedRange.end);
-                      }
-                    }
-
-                    Navigator.pop(context);
-                  },
                 ),
               ),
 
