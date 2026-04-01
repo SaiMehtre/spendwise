@@ -83,6 +83,33 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   d.isBefore(endDate!.add(const Duration(days: 1))));
         }).toList();
 
+        if (filteredExpenses.isEmpty) {
+          return Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color(0xFF0f2027),
+                  Color(0xFF203a43),
+                  Color(0xFF2c5364),
+                ],
+              ),
+            ),
+            child: const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.search_off, size: 60, color: Colors.white38),
+                  SizedBox(height: 10),
+                  Text(
+                    "No matching results",
+                    style: TextStyle(color: Colors.white70, fontSize: 16),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
           double total = 0;
           Map<String, double> categoryMap = {};
 
@@ -455,6 +482,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   Widget buildFilterCard() {
+
+    
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
       child: BackdropFilter(
@@ -539,9 +568,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             children: [
               ...[
                 "Today",
-                "Week",
-                "Month",
-                "Year",
+                "Select Week (Custom)",
+                "Select Month",
+                "Select Year",
                 "Single Date",
                 "Date Range",
                 "All Time"
@@ -552,30 +581,58 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   onTap: () async {
                     final now = DateTime.now();
 
-                    setState(() {
-                      selectedFilter = e;
-                    });
-
                     if (e == "Today") {
                       startDate = now;
                       endDate = now;
                     }
 
-                    if (e == "Week") {
-                      startDate = now.subtract(const Duration(days: 6));
-                      endDate = now;
+                    /// SELECT MONTH (ANY MONTH)
+                    if (e == "Select Month") {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: now,
+                        firstDate: DateTime(2020),
+                        lastDate: now,
+                        initialDatePickerMode: DatePickerMode.year,
+                      );
+
+                      if (picked != null) {
+                        startDate = DateTime(picked.year, picked.month, 1);
+                        endDate = DateTime(picked.year, picked.month + 1, 0);
+                      }
                     }
 
-                    if (e == "Month") {
-                      startDate = DateTime(now.year, now.month, 1);
-                      endDate = now;
+                    /// SELECT YEAR (ANY YEAR)
+                    if (e == "Select Year") {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: now,
+                        firstDate: DateTime(2020),
+                        lastDate: now,
+                        initialDatePickerMode: DatePickerMode.year,
+                      );
+
+                      if (picked != null) {
+                        startDate = DateTime(picked.year, 1, 1);
+                        endDate = DateTime(picked.year, 12, 31);
+                      }
                     }
 
-                    if (e == "Year") {
-                      startDate = DateTime(now.year, 1, 1);
-                      endDate = now;
+                    /// CUSTOM WEEK (INSIDE ANY MONTH)
+                    if (e == "Select Week (Custom)") {
+                      final pickedRange = await showDateRangePicker(
+                        context: context,
+                        firstDate: DateTime(2020),
+                        lastDate: now,
+                      );
+
+                      if (pickedRange != null) {
+                        startDate = pickedRange.start;
+                        endDate = pickedRange.end;
+                      }
                     }
 
+                    /// SINGLE DATE
                     if (e == "Single Date") {
                       final picked = await showDatePicker(
                         context: context,
@@ -590,6 +647,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       }
                     }
 
+                    /// DATE RANGE
                     if (e == "Date Range") {
                       final pickedRange = await showDateRangePicker(
                         context: context,
@@ -603,11 +661,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       }
                     }
 
+                    /// ALL TIME
                     if (e == "All Time") {
                       startDate = null;
                       endDate = null;
                     }
 
+                    setState(() {});
                     Navigator.pop(context); 
                   },
                 );
