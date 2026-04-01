@@ -32,10 +32,14 @@ class FilterSideBar extends StatelessWidget {
         : months[selectedMonth!.month];
 
     return Material(
-      color: Colors.transparent,
+  color: Colors.transparent,
+  child: Padding(
+    padding: const EdgeInsets.only(top: 70), // 👈 adjust based on search bar height
+    child: Align(
+      alignment: Alignment.topRight,
       child: Container(
         width: MediaQuery.of(context).size.width * 0.75,
-        height: double.infinity,
+        height: MediaQuery.of(context).size.height * 0.65,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
@@ -54,6 +58,7 @@ class FilterSideBar extends StatelessWidget {
         ),
         child: SafeArea(
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
 
@@ -82,20 +87,30 @@ class FilterSideBar extends StatelessWidget {
               const Text("Category", style: TextStyle(color: Colors.white70)),
               const SizedBox(height: 8),
 
-              DropdownButton<String>(
-                value: selectedCategory,
-                dropdownColor: Colors.black,
-                isExpanded: true,
-                items: ['All', 'Food', 'Travel', 'Shopping', 'Bills', 'Other']
-                    .map((cat) => DropdownMenuItem(
-                          value: cat,
-                          child: Text(cat,
-                              style: const TextStyle(color: Colors.white)),
-                        ))
-                    .toList(),
-                onChanged: (value) {
-                  onCategoryChanged(value!);
-                },
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white24),
+                ),
+                child: DropdownButton<String>(
+                  value: selectedCategory, // month ke liye change karna
+                  dropdownColor: Colors.black,
+                  isExpanded: true,
+                  underline: const SizedBox(),
+                  items: ['All', 'Food', 'Travel', 'Shopping', 'Bills', 'Other']
+                      .map((cat) => DropdownMenuItem(
+                            value: cat,
+                            child: Text(cat,
+                                style: const TextStyle(color: Colors.white)),
+                          ))
+                      .toList(),
+                  onChanged: (value) {
+                    onCategoryChanged(value!);
+                    Navigator.pop(context);
+                  },
+                ),
               ),
 
               const SizedBox(height: 20),
@@ -104,126 +119,164 @@ class FilterSideBar extends StatelessWidget {
               const Text("Month", style: TextStyle(color: Colors.white70)),
               const SizedBox(height: 8),
 
-              DropdownButton<String>(
-                value: selectedMonthLabel,
-                dropdownColor: Colors.black,
-                isExpanded: true,
-                items: months.map((m) {
-                  return DropdownMenuItem(
-                    value: m,
-                    child:
-                        Text(m, style: const TextStyle(color: Colors.white)),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  if (value == 'All') {
-                    onMonthChanged(null);
-                  } else {
-                    final monthMap = {
-                      'Jan': 1,
-                      'Feb': 2,
-                      'Mar': 3,
-                      'Apr': 4,
-                      'May': 5,
-                      'Jun': 6,
-                      'Jul': 7,
-                      'Aug': 8,
-                      'Sep': 9,
-                      'Oct': 10,
-                      'Nov': 11,
-                      'Dec': 12,
-                    };
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white24),
+                ),
+                  child: DropdownButton<String>(
+                    value: selectedMonthLabel,
+                    dropdownColor: Colors.black,
+                    isExpanded: true,
+                    items: months.map((m) {
+                      return DropdownMenuItem(
+                        value: m,
+                        child:
+                            Text(m, style: const TextStyle(color: Colors.white)),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      if (value == 'All') {
+                        onMonthChanged(null);
+                      } else {
+                        final monthMap = {
+                          'Jan': 1,
+                          'Feb': 2,
+                          'Mar': 3,
+                          'Apr': 4,
+                          'May': 5,
+                          'Jun': 6,
+                          'Jul': 7,
+                          'Aug': 8,
+                          'Sep': 9,
+                          'Oct': 10,
+                          'Nov': 11,
+                          'Dec': 12,
+                        };
 
-                    final month = monthMap[value]!;
-                    onMonthChanged(
-                        DateTime(DateTime.now().year, month));
-                  }
-                },
+                        final month = monthMap[value]!;
+                        onMonthChanged(
+                            DateTime(DateTime.now().year, month));
+                      }
+                      Navigator.pop(context);
+                    },
+                  ),
               ),
 
               const SizedBox(height: 20),
 
               /// QUICK FILTERS
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        final today = DateTime.now();
-                        onStartDateChanged?.call(today);
-                        onEndDateChanged?.call(today);
-                      },
-                      child: const Text("Today"),
-                    ),
+              const Text("Date Filter", style: TextStyle(color: Colors.white70)),
+              const SizedBox(height: 8),
+
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white24),
+                ),
+                child: DropdownButton<String>(
+                  value: null,
+                  hint: const Text(
+                    "Select Date Filter",
+                    style: TextStyle(color: Colors.white54),
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        final today = DateTime.now();
-                        final last7 =
-                            today.subtract(const Duration(days: 6));
-                        onStartDateChanged?.call(last7);
-                        onEndDateChanged?.call(today);
-                      },
-                      child: const Text("7 Days"),
-                    ),
-                  ),
-                ],
-              ),
+                  dropdownColor: Colors.black,
+                  isExpanded: true,
+                  items: ["Today", "Last 7 Days", "Single Date", "Date Range"]
+                      .map((e) => DropdownMenuItem(
+                            value: e,
+                            child: Text(e, style: const TextStyle(color: Colors.white)),
+                          ))
+                      .toList(),
+                  onChanged: (value) async {
+                    final today = DateTime.now();
 
-              const SizedBox(height: 20),
+                    if (value == "Today") {
+                      onStartDateChanged?.call(today);
+                      onEndDateChanged?.call(today);
+                    }
 
-              ElevatedButton(
-                onPressed: () async {
-                  final picked = await showDatePicker(
-                    context: context,
-                    initialDate: DateTime.now(),
-                    firstDate: DateTime(2020),
-                    lastDate: DateTime.now(),
-                  );
+                    if (value == "Last 7 Days") {
+                      final last7 = today.subtract(const Duration(days: 6));
+                      onStartDateChanged?.call(last7);
+                      onEndDateChanged?.call(today);
+                    }
 
-                  if (picked != null) {
-                    onStartDateChanged?.call(picked);
-                    onEndDateChanged?.call(picked);
-                  }
-                },
-                child: const Text("Single Date"),
-              ),
+                    if (value == "Single Date") {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: today,
+                        firstDate: DateTime(2020),
+                        lastDate: today,
+                      );
 
-              const SizedBox(height: 10),
+                      if (picked != null) {
+                        onStartDateChanged?.call(picked);
+                        onEndDateChanged?.call(picked);
+                      }
+                    }
 
-              ElevatedButton(
-                onPressed: () async {
-                  final pickedRange = await showDateRangePicker(
-                    context: context,
-                    firstDate: DateTime(2020),
-                    lastDate: DateTime.now(),
-                  );
+                    if (value == "Date Range") {
+                      final pickedRange = await showDateRangePicker(
+                        context: context,
+                        firstDate: DateTime(2020),
+                        lastDate: today,
+                      );
 
-                  if (pickedRange != null) {
-                    onStartDateChanged?.call(pickedRange.start);
-                    onEndDateChanged?.call(pickedRange.end);
-                  }
-                },
-                child: const Text("Date Range"),
+                      if (pickedRange != null) {
+                        onStartDateChanged?.call(pickedRange.start);
+                        onEndDateChanged?.call(pickedRange.end);
+                      }
+                    }
+
+                    Navigator.pop(context);
+                  },
+                ),
               ),
 
               const Spacer(),
 
               /// CLEAR
-              TextButton(
-                onPressed: () {
-                  onClear();
-                  Navigator.pop(context);
-                },
-                child: const Text("Clear Filters",
-                    style: TextStyle(color: Colors.redAccent)),
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFFF416C), Color(0xFFFF4B2B)],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () {
+                    onClear();
+                    Navigator.pop(context);
+                  },
+                  child: const Text(
+                    "Clear Filters",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
         ),
       ),
+    ),
+  ),
     );
   }
 }
