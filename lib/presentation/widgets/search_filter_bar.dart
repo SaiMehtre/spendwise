@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'filter_bottom_sheet.dart';
+import 'filter_sidebar.dart';
 
 class SearchFilterBar extends StatelessWidget {
   final Function(String) onSearch;
@@ -48,49 +48,51 @@ class SearchFilterBar extends StatelessWidget {
             color: isFilterActive ? Colors.orange : Colors.white70,
           ),
           onPressed: () {
-            showModalBottomSheet(
+            showGeneralDialog(
               context: context,
-              backgroundColor: Colors.transparent,
-              builder: (_) => FilterBottomSheet(
-                selectedCategory: selectedCategory,
-                selectedMonth: selectedMonth,
-
-                onCategoryChanged: onCategoryChanged,
-
-                onMonthChanged: (val) {
-                  onMonthChanged(val);
-
-                  // 👉 month select hua to range reset
-                  onStartDateChanged(null);
-                  onEndDateChanged(null);
-                },
-
-                onClear: () {
-                  onClear();
-
-                  // 👉 clear me sab reset
-                  onStartDateChanged(null);
-                  onEndDateChanged(null);
-                },
-
-                // 🔥 NEW PARAMETERS (IMPORTANT)
-                startDate: startDate,
-                endDate: endDate,
-
-                onStartDateChanged: (val) {
-                  onStartDateChanged(val);
-
-                  // 👉 range select hua to month reset
-                  onMonthChanged(null);
-                },
-
-                onEndDateChanged: (val) {
-                  onEndDateChanged(val);
-
-                  // 👉 range select hua to month reset
-                  onMonthChanged(null);
-                },
-              ),
+              barrierDismissible: true,
+              barrierLabel: "Filter",
+              barrierColor: Colors.black54,
+              transitionDuration: const Duration(milliseconds: 300),
+              pageBuilder: (context, anim1, anim2) {
+                return Align(
+                  alignment: Alignment.centerRight,
+                  child: FilterSideBar(
+                    selectedCategory: selectedCategory,
+                    selectedMonth: selectedMonth,
+                    onCategoryChanged: onCategoryChanged,
+                    onMonthChanged: (val) {
+                      onMonthChanged(val);
+                      onStartDateChanged(null);
+                      onEndDateChanged(null);
+                    },
+                    onClear: () {
+                      onClear();
+                      onStartDateChanged(null);
+                      onEndDateChanged(null);
+                    },
+                    startDate: startDate,
+                    endDate: endDate,
+                    onStartDateChanged: (val) {
+                      onStartDateChanged(val);
+                      onMonthChanged(null);
+                    },
+                    onEndDateChanged: (val) {
+                      onEndDateChanged(val);
+                      onMonthChanged(null);
+                    },
+                  ),
+                );
+              },
+              transitionBuilder: (context, anim, secAnim, child) {
+                return SlideTransition(
+                  position: Tween(
+                    begin: const Offset(1, 0),
+                    end: const Offset(0, 0),
+                  ).animate(anim),
+                  child: child,
+                );
+              },
             );
           },
         ),

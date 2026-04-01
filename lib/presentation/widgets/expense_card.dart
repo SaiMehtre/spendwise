@@ -42,75 +42,107 @@ Widget build(BuildContext context) {
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: Colors.white24),
               ),
-          child: Row(
+          child: Stack(
             children: [
-              Container(
-                width: 6,
-                height: 70,
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.9),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(16),
-                    bottomLeft: Radius.circular(16),
+
+              // ✅ LEFT STRIP (auto full height)
+              Positioned(
+                left: 0,
+                top: 0,
+                bottom: 0,
+                child: Container(
+                  width: 6,
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.9),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(16),
+                      bottomLeft: Radius.circular(16),
+                    ),
                   ),
                 ),
               ),
 
-              const SizedBox(width: 10),
-
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: color, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              // ✅ ORIGINAL CONTENT (unchanged, just padded)
+              Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Text((item.category),style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold)),
-                    
-                    AnimatedCrossFade(
-                      duration: const Duration(milliseconds: 350),
-                      curve: Curves.easeInOut,
-                      crossFadeState: isExpanded
-                          ? CrossFadeState.showSecond
-                          : CrossFadeState.showFirst,
-                      firstChild: Text(
-                        item.note,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Colors.white70,
-                        ),
+
+                    const SizedBox(width: 8),
+
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.15),
+                        shape: BoxShape.circle,
                       ),
-                      secondChild: Text(
-                        item.note,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Colors.white70,
-                        ),
+                      child: Icon(icon, color: color, size: 20),
+                    ),
+
+                    const SizedBox(width: 12),
+
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text((item.category),
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold)),
+
+                          AnimatedCrossFade(
+                            duration: const Duration(milliseconds: 350),
+                            firstCurve: Curves.easeIn,
+                            secondCurve: Curves.easeOut,
+                            sizeCurve: Curves.easeInOut,
+                            crossFadeState: isExpanded
+                                ? CrossFadeState.showSecond
+                                : CrossFadeState.showFirst,
+                            firstChild: Text(
+                              item.note,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Colors.white70,
+                              ),
+                            ),
+                            secondChild: Text(
+                              item.note,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Colors.white70,
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 8),
+
+                          Text(
+                            FormatUtils.formatDate(item.date),
+                            style: const TextStyle(
+                                fontSize: 11,
+                                color: Colors.grey,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 4),
+
+                    const SizedBox(width: 8),
+
                     Text(
-                      FormatUtils.formatDate(item.date),
+                      FormatUtils.formatCurrency(item.amount),
+                      textAlign: TextAlign.right,
                       style: const TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey,
-                        fontWeight: FontWeight.bold
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
                       ),
                     ),
                   ],
                 ),
-              ),
-              Text(
-                FormatUtils.formatCurrency(item.amount),
-                style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 14,),
               ),
             ],
           ),

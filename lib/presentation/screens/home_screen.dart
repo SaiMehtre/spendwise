@@ -251,7 +251,7 @@ class _HomeScreenState extends State<HomeScreen> {
         loadExpenses: loadExpenses,
         buildDashboardCards: buildDashboardCards,
         formatDate: formatDate,
-        onTabChange: (index) {          // ✅ ADD THIS
+        onTabChange: (index) {          // ADD THIS
           setState(() => selectedIndex = index);
         },
       ),
@@ -281,21 +281,21 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         child: AnimatedSwitcher(
-  duration: const Duration(milliseconds: 400),
-  transitionBuilder: (child, animation) {
-    return FadeTransition(
-      opacity: animation,
-      child: SlideTransition(
-        position: Tween<Offset>(
-          begin: const Offset(0.1, 0),
-          end: Offset.zero,
-        ).animate(animation),
-        child: child,
-      ),
-    );
-  },
-  child: screens[selectedIndex],
-),
+          duration: const Duration(milliseconds: 400),
+          transitionBuilder: (child, animation) {
+            return FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0.1, 0),
+                  end: Offset.zero,
+                ).animate(animation),
+                child: child,
+              ),
+            );
+          },
+          child: screens[selectedIndex],
+        ),
       ),
       
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -740,6 +740,6 @@ class HomeContent extends StatefulWidget  {
               ),
             ],
         
-    ); // 👈 pura jo body me tha
+    ); 
   }
 }

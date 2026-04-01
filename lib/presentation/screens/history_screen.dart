@@ -61,13 +61,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
             end: Alignment.bottomRight,
           ),
         ),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(8),
         child: Column(
           children: [
             const SizedBox(height: 8),
            
             SearchFilterBar(
-              
+                            
               onSearch: (value) {
                 if (_debounce?.isActive ?? false) _debounce!.cancel();
 
@@ -97,8 +97,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   endDate = null;
                 });
               },
-
-              // 🔥 NEW ADDITIONS
+              
               startDate: startDate,
               endDate: endDate,
 
