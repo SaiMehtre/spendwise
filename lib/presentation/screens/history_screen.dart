@@ -8,6 +8,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
 import '../widgets/search_filter_bar.dart';
 import '../../core/utils/category_utils.dart';
+import '../../core/utils/pdf_exporter.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -42,6 +43,30 @@ class _HistoryScreenState extends State<HistoryScreen> {
     _debounce?.cancel();
     super.dispose();
   }
+
+  String getFilterLabel() {
+    List<String> filters = [];
+
+    if (selectedCategory != 'All') {
+      filters.add("Category: $selectedCategory");
+    }
+
+    if (selectedMonth != null) {
+      filters.add("Month: ${DateFormat.MMMM().format(selectedMonth!)}");
+    }
+
+    if (startDate != null && endDate != null) {
+      filters.add(
+        "${DateFormat('dd MMM').format(startDate!)} - ${DateFormat('dd MMM').format(endDate!)}",
+      );
+    }
+
+    if (startDate != null && endDate == null) {
+      filters.add(DateFormat('dd MMM yyyy').format(startDate!));
+    }
+
+    return filters.isEmpty ? "All Expenses" : filters.join(" | ");
+}
 
   @override
   Widget build(BuildContext context) {
@@ -111,6 +136,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
             ),
 
             const SizedBox(height: 8),
+
+            
 
             if (selectedCategory != 'All' || selectedMonth != null || startDate != null)
               Padding(                               
@@ -313,8 +340,26 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     );
                   }
 
+                  return Column(
+                  children: [
 
-                  return ListView.builder(
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () async {
+                          final pdfBytes = await generateProfessionalPdf(
+                            filteredExpenses,
+                            getFilterLabel(), // 👈 FIXED
+                          );
+
+                          await saveAndOpenPdf(pdfBytes);
+                        },
+                        icon: const Icon(Icons.download),
+                        label: const Text("Download PDF"),
+                      ),
+                    ),
+                  Expanded(
+                    child: ListView.builder(
                     padding: const EdgeInsets.only(bottom: 80),
                     itemCount: filteredExpenses.length,
                     itemBuilder: (context, index) {
@@ -504,6 +549,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         child: ExpenseCard(item: item),
                       );
                     },
+                  ),
+                  ),
+                  ]
                   );
                 },
               ),

@@ -43,6 +43,12 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     endDate = todayEnd;
   }
 
+  DateTime parseDate(dynamic date) {
+    if (date is DateTime) return date;
+    if (date is String) return DateTime.parse(date);
+    throw Exception("Invalid date format");
+  }
+
   IconData _getFilterIcon(String value) {
     switch (value) {
       case "Today":
@@ -101,7 +107,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     for (var e in expenses) {
       final amount = e['amount'];
 
-      final raw = DateTime.parse(e['date']);
+      final raw = parseDate(e['date']);
       final d = DateTime(raw.year, raw.month, raw.day);
 
       if ((d.isAtSameMomentAs(startDate!) || d.isAfter(startDate!)) &&
@@ -112,7 +118,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
     if (total == 0) return "No spending this week 🧘";
 
-    return "You spent ₹${total.toStringAsFixed(0)} in selected range 💸";
+    return "You spent ₹${total.toStringAsFixed(0)} in selected Week 💸";
   }
   
 
@@ -133,7 +139,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           }).toList();
 
           final filteredExpenses = expenses.where((e) {
-          final raw = DateTime.parse(e['date']);
+          final raw = parseDate(e['date']);
           final d = DateTime(raw.year, raw.month, raw.day);
 
           // All Time
@@ -191,7 +197,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               child: Column(
                 children: [
                   buildFilterCard(),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 8),                  
 
                   if (filteredExpenses.isEmpty) ...[
                     const SizedBox(height: 80),
@@ -692,7 +698,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
 
-                                    /// 🔥 MONTH DROPDOWN
+                                    /// MONTH DROPDOWN
                                     DropdownButton<int>(
                                       value: tempMonth,
                                       dropdownColor: Colors.black,
@@ -715,7 +721,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
                                     const SizedBox(height: 10),
 
-                                    /// 🔥 YEAR DROPDOWN
+                                    /// YEAR DROPDOWN
                                     DropdownButton<int>(
                                       value: tempYear,
                                       dropdownColor: Colors.black,
@@ -758,7 +764,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                                       startDate = DateTime(tempYear, tempMonth, 1);
                                       endDate = DateTime(tempYear, tempMonth + 1, 1); // next month start
 
-                                      setState(() {}); // 🔥 important refresh
+                                      setState(() {}); // important refresh
                                       Navigator.pop(context);
                                     },
                                     child: const Text(
@@ -807,7 +813,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                                     );
                                   }),
 
-                                  /// 🔥 FIX HERE
+                                  /// FIX HERE
                                   onChanged: (val) {
                                     setStateDialog(() {
                                       tempYear = val!;
@@ -831,7 +837,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                                       startDate = DateTime(tempYear, 1, 1);
                                       endDate = DateTime(tempYear + 1, 1, 1); // next year start
 
-                                      setState(() {}); // 🔥 refresh main UI
+                                      setState(() {}); // refresh main UI
                                       Navigator.pop(context);
                                     },
                                     child: const Text(
@@ -861,7 +867,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                           return StatefulBuilder(
                             builder: (context, setStateDialog) {
 
-                              /// 🔥 GET ALL ISO WEEKS (MON-SUN)
+                              /// GET ALL ISO WEEKS (MON-SUN)
                               List<Map<String, DateTime>> getWeeks(int year, int month) {
                                 List<Map<String, DateTime>> weeks = [];
 
@@ -902,7 +908,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
 
-                                    /// 🔥 MONTH
+                                    /// MONTH
                                     DropdownButton<int>(
                                       value: tempMonth,
                                       isExpanded: true,
@@ -926,7 +932,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
                                     const SizedBox(height: 10),
 
-                                    /// 🔥 YEAR
+                                    /// YEAR
                                     DropdownButton<int>(
                                       value: tempYear,
                                       isExpanded: true,
@@ -951,7 +957,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
                                     const SizedBox(height: 10),
 
-                                    /// 🔥 ISO WEEK SELECTOR
+                                    /// ISO WEEK SELECTOR
                                     DropdownButton<int>(
                                       value: tempWeekIndex,
                                       isExpanded: true,
