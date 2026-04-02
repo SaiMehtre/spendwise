@@ -51,6 +51,8 @@ class FilterSideBar extends StatelessWidget {
     required this.onEndDateChanged,
   });
 
+  
+
   @override
   Widget build(BuildContext context) {
     String selectedMonthLabel = selectedMonth == null
@@ -65,7 +67,9 @@ class FilterSideBar extends StatelessWidget {
       alignment: Alignment.topRight,
       child: Container(
         width: MediaQuery.of(context).size.width * 0.75,
-        height: MediaQuery.of(context).size.height * 0.65,
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
@@ -198,7 +202,7 @@ class FilterSideBar extends StatelessWidget {
                         };
 
                         final month = monthMap[value]!;
-                        onMonthChanged(DateTime(DateTime.now().year, month));
+                        onMonthChanged(DateTime(DateTime.now().year, month, 1));
                       }
                       Navigator.pop(context);
                     },
@@ -254,13 +258,13 @@ class FilterSideBar extends StatelessWidget {
 
                       if (value == "Today") {
                         onStartDateChanged?.call(today);
-                        onEndDateChanged?.call(today);
+                        onEndDateChanged?.call(today.add(const Duration(days: 1)));
                       }
 
                       if (value == "Last 7 Days") {
                         final last7 = today.subtract(const Duration(days: 6));
                         onStartDateChanged?.call(last7);
-                        onEndDateChanged?.call(today);
+                        onEndDateChanged?.call(today.add(const Duration(days: 1)));
                       }
 
                       if (value == "Single Date") {
@@ -273,7 +277,7 @@ class FilterSideBar extends StatelessWidget {
 
                         if (picked != null) {
                           onStartDateChanged?.call(picked);
-                          onEndDateChanged?.call(picked);
+                          onEndDateChanged?.call(picked.add(const Duration(days: 1)));
                         }
                       }
 
@@ -286,7 +290,7 @@ class FilterSideBar extends StatelessWidget {
 
                         if (pickedRange != null) {
                           onStartDateChanged?.call(pickedRange.start);
-                          onEndDateChanged?.call(pickedRange.end);
+                          onEndDateChanged?.call(pickedRange.end.add(const Duration(days: 1)));
                         }
                       }
 

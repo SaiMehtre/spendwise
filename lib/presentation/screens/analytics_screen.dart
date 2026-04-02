@@ -71,27 +71,23 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
     if (startDate != null && endDate != null) {
       // Same day
-      if (startDate != null &&
-          endDate != null &&
-          startDate!.year == endDate!.year &&
-          startDate!.month == endDate!.month &&
-          startDate!.day == endDate!.day) {
+      if (endDate!.difference(startDate!).inDays == 1) {
         return DateFormat("dd MMM yyyy").format(startDate!);
       }
 
       // Same month
-      if (startDate!.month == endDate!.month &&
-          startDate!.year == endDate!.year) {
+      if (endDate!.difference(startDate!).inDays >= 28 &&
+          endDate!.difference(startDate!).inDays <= 31) {
         return DateFormat("MMM yyyy").format(startDate!);
       }
 
       // Same year
       if (startDate!.year == endDate!.year) {
-        return "${DateFormat("MMM").format(startDate!)} - ${DateFormat("MMM yyyy").format(endDate!)}";
+        return "${DateFormat("MMM yyyy").format(startDate!)} - ${DateFormat("MMM yyyy").format(endDate!.subtract(const Duration(days: 1)))}";
       }
 
       // Full range
-      return "${DateFormat("dd MMM yyyy").format(startDate!)} - ${DateFormat("dd MMM yyyy").format(endDate!)}";
+      return "${DateFormat("dd MMM yyyy").format(startDate!)} - ${DateFormat("dd MMM yyyy").format(endDate!.subtract(const Duration(days: 1)))}";
     }
 
     return selectedFilter;
@@ -135,9 +131,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             item['key'] = key;
             return item;
           }).toList();
-
-          // 🟡 DATE FILTER (MONTH)
-          final now = DateTime.now();
 
           final filteredExpenses = expenses.where((e) {
           final raw = DateTime.parse(e['date']);
@@ -234,7 +227,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     const SizedBox(height: 8),
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 400),
-                      child: selectedFilter == "Select Week (Custom)"
+                      child: (startDate != null && endDate != null)
                       ? Text(
                           getWeeklyInsightSimple(filteredExpenses),
                           key: ValueKey(startDate.toString() + endDate.toString() + "insight"),
@@ -527,8 +520,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               const SizedBox(height: 20),
               Column(
                 children: (data.isEmpty
-                    ? ["Food", "Travel", "Shopping", "Bills", "Others"]
-                    : data.keys).map((key) {
+                        ? <String>[]
+                        : data.keys.toList()).map((key) {
                   final value = data[key] ?? 0;
                   final percent = total == 0 ? 0 : (value / total) * 100;
                   final color = CategoryUtils.getColor(key);
@@ -666,6 +659,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   leading: Icon(_getFilterIcon(e), color: Colors.white70),
                   title: Text(e, style: const TextStyle(color: Colors.white)),
                   onTap: () async {
+                    selectedFilter = e;
                     final now = DateTime.now();
 
                     if (e == "Today") {
