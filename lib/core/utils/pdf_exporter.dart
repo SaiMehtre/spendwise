@@ -19,11 +19,18 @@ Future<void> saveAndOpenPdf(Uint8List bytes) async {
 Future<Uint8List> generateProfessionalPdf(List expenses, String filterTitle) async {
   final pdf = pw.Document();
 
+  /// ✅ LOAD FONTS (UNICODE FIX)
+  final fontRegular = await rootBundle.load("assets/fonts/Roboto-Regular.ttf");
+  final fontBold = await rootBundle.load("assets/fonts/Roboto-Bold.ttf");
+
+  final ttfRegular = pw.Font.ttf(fontRegular);
+  final ttfBold = pw.Font.ttf(fontBold);
+
   final formatter = NumberFormat.currency(locale: 'en_IN', symbol: '₹');
 
-  // 🔥 Load Logo (optional)
-  final logo = await rootBundle.load('assets/images/logo.png');
-  final logoBytes = logo.buffer.asUint8List();
+  /// 🔥 OPTIONAL LOGO (COMMENTED)
+  // final logo = await rootBundle.load('assets/images/logo.png');
+  // final logoBytes = logo.buffer.asUint8List();
 
   double total = 0;
   for (var e in expenses) {
@@ -31,71 +38,131 @@ Future<Uint8List> generateProfessionalPdf(List expenses, String filterTitle) asy
   }
 
   pdf.addPage(
-    pw.Page(
+    pw.MultiPage(
+      theme: pw.ThemeData.withFont(
+        base: ttfRegular,
+        bold: ttfBold,
+      ),
       pageFormat: PdfPageFormat.a4,
       build: (context) {
-        return pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
-          children: [
+        return [
 
-            // 🔥 HEADER
-            pw.Row(
+          /// 🔥 HEADER
+          pw.Container(
+            padding: const pw.EdgeInsets.only(bottom: 10),
+            decoration: const pw.BoxDecoration(
+              border: pw.Border(
+                bottom: pw.BorderSide(color: PdfColors.grey),
+              ),
+            ),
+            child: pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
-                pw.Image(pw.MemoryImage(logoBytes), width: 50),
+                // pw.Image(pw.MemoryImage(logoBytes), width: 50),
+
                 pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.end,
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
-                    pw.Text("Expense Report",
-                        style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
-                    pw.Text(filterTitle),
-                    pw.Text(DateFormat('dd MMM yyyy').format(DateTime.now())),
-                  ],
-                )
-              ],
-            ),
-
-            pw.SizedBox(height: 20),
-
-            // 🔥 TABLE HEADER
-            pw.Container(
-              color: PdfColors.grey300,
-              padding: pw.EdgeInsets.all(8),
-              child: pw.Row(
-                children: [
-                  pw.Expanded(child: pw.Text("Date")),
-                  pw.Expanded(child: pw.Text("Category")),
-                  pw.Expanded(child: pw.Text("Amount")),
-                ],
-              ),
-            ),
-
-            // 🔥 TABLE DATA
-            ...expenses.map((e) {
-              return pw.Container(
-                padding: pw.EdgeInsets.all(8),
-                child: pw.Row(
-                  children: [
-                    pw.Expanded(child: pw.Text(DateFormat('dd-MM-yyyy').format(e.date))),
-                    pw.Expanded(child: pw.Text(e.category)),
-                    pw.Expanded(child: pw.Text(formatter.format(e.amount))),
+                    pw.Text(
+                      "Expense Report",
+                      style: pw.TextStyle(
+                        fontSize: 20,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                    pw.SizedBox(height: 4),
+                    pw.Text(
+                      filterTitle,
+                      style: const pw.TextStyle(fontSize: 12),
+                    ),
                   ],
                 ),
-              );
-            }),
 
-            pw.Divider(),
+                pw.Text(
+                  DateFormat('dd MMM yyyy').format(DateTime.now()),
+                  style: const pw.TextStyle(fontSize: 10),
+                ),
+              ],
+            ),
+          ),
 
-            // 🔥 TOTAL
-            pw.Align(
-              alignment: pw.Alignment.centerRight,
-              child: pw.Text(
-                "Total: ${formatter.format(total)}",
-                style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+          pw.SizedBox(height: 20),
+
+          /// 🔥 TABLE
+          pw.Table(
+            border: pw.TableBorder.all(color: PdfColors.grey300),
+            columnWidths: {
+              0: const pw.FlexColumnWidth(2),
+              1: const pw.FlexColumnWidth(2),
+              2: const pw.FlexColumnWidth(1.5),
+            },
+            children: [
+
+              /// HEADER ROW
+              pw.TableRow(
+                decoration: const pw.BoxDecoration(
+                  color: PdfColors.grey300,
+                ),
+                children: [
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.all(8),
+                    child: pw.Text("Date", style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                  ),
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.all(8),
+                    child: pw.Text("Category", style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                  ),
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.all(8),
+                    child: pw.Text("Amount", style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                  ),
+                ],
+              ),
+
+              /// DATA ROWS
+              ...expenses.map((e) {
+                return pw.TableRow(
+                  children: [
+                    pw.Padding(
+                      padding: const pw.EdgeInsets.all(8),
+                      child: pw.Text(DateFormat('dd MMM yyyy').format(e.date)),
+                    ),
+                    pw.Padding(
+                      padding: const pw.EdgeInsets.all(8),
+                      child: pw.Text(e.category),
+                    ),
+                    pw.Padding(
+                      padding: const pw.EdgeInsets.all(8),
+                      child: pw.Align(
+                        alignment: pw.Alignment.centerRight,
+                        child: pw.Text(formatter.format(e.amount)),
+                      ),
+                    ),
+                  ],
+                );
+              }).toList(),
+            ],
+          ),
+
+          pw.SizedBox(height: 20),
+
+          /// 🔥 TOTAL BOX
+          pw.Container(
+            alignment: pw.Alignment.centerRight,
+            padding: const pw.EdgeInsets.all(10),
+            decoration: pw.BoxDecoration(
+              color: PdfColors.grey200,
+              borderRadius: pw.BorderRadius.circular(6),
+            ),
+            child: pw.Text(
+              "Total: ${formatter.format(total)}",
+              style: pw.TextStyle(
+                fontSize: 16,
+                fontWeight: pw.FontWeight.bold,
               ),
             ),
-          ],
-        );
+          ),
+        ];
       },
     ),
   );
