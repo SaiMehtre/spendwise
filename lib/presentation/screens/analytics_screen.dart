@@ -31,6 +31,18 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     Colors.purple,
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    final now = DateTime.now();
+
+    final todayStart = DateTime(now.year, now.month, now.day);
+    final todayEnd = todayStart.add(const Duration(days: 1));
+
+    startDate = todayStart;
+    endDate = todayEnd;
+  }
+
   IconData _getFilterIcon(String value) {
     switch (value) {
       case "Today":
@@ -59,7 +71,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
     if (startDate != null && endDate != null) {
       // Same day
-      if (startDate == endDate) {
+      if (startDate != null &&
+          endDate != null &&
+          startDate!.year == endDate!.year &&
+          startDate!.month == endDate!.month &&
+          startDate!.day == endDate!.day) {
         return DateFormat("dd MMM yyyy").format(startDate!);
       }
 
@@ -87,18 +103,20 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     double total = 0;
 
     for (var e in expenses) {
-      final d = DateTime.parse(e['date']);
       final amount = e['amount'];
 
-      if (d.isAfter(startDate!.subtract(const Duration(days: 1))) &&
-          d.isBefore(endDate!.add(const Duration(days: 1)))) {
+      final raw = DateTime.parse(e['date']);
+      final d = DateTime(raw.year, raw.month, raw.day);
+
+      if ((d.isAtSameMomentAs(startDate!) || d.isAfter(startDate!)) &&
+          d.isBefore(endDate!)) {
         total += amount;
       }
     }
 
     if (total == 0) return "No spending this week 🧘";
 
-    return "You spent ₹${total.toStringAsFixed(0)} this week 💸";
+    return "You spent ₹${total.toStringAsFixed(0)} in selected range 💸";
   }
   
 
@@ -122,16 +140,17 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           final now = DateTime.now();
 
           final filteredExpenses = expenses.where((e) {
-          final d = DateTime.parse(e['date']);
+          final raw = DateTime.parse(e['date']);
+          final d = DateTime(raw.year, raw.month, raw.day);
 
-          // 👉 All Time
+          // All Time
           if (startDate == null && endDate == null) {
             return true;
           }
 
-          // 👉 range filter
-          return (d.isAfter(startDate!.subtract(const Duration(days: 1))) &&
-                  d.isBefore(endDate!.add(const Duration(days: 1))));
+          // range filter
+          return (d.isAtSameMomentAs(startDate!) || d.isAfter(startDate!)) &&
+                  d.isBefore(endDate!);
         }).toList();
 
           double total = 0;
@@ -217,7 +236,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       duration: const Duration(milliseconds: 400),
                       child: selectedFilter == "Select Week (Custom)"
                       ? Text(
-                          getWeeklyInsightSimple(expenses),
+                          getWeeklyInsightSimple(filteredExpenses),
                           key: ValueKey(startDate.toString() + endDate.toString() + "insight"),
                           textAlign: TextAlign.center,
                           style: const TextStyle(
@@ -650,8 +669,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     final now = DateTime.now();
 
                     if (e == "Today") {
-                      startDate = now;
-                      endDate = now;
+                      final todayStart = DateTime(now.year, now.month, now.day);
+                      final todayEnd = todayStart.add(const Duration(days: 1));
+
+                      startDate = todayStart;
+                      endDate = todayEnd;
                     }
 
                     /// SELECT MONTH (ANY MONTH)
@@ -740,7 +762,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                                       selectedYear = tempYear;
 
                                       startDate = DateTime(tempYear, tempMonth, 1);
-                                      endDate = DateTime(tempYear, tempMonth + 1, 0);
+                                      endDate = DateTime(tempYear, tempMonth + 1, 1); // next month start
 
                                       setState(() {}); // 🔥 important refresh
                                       Navigator.pop(context);
@@ -813,7 +835,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                                       selectedYear = tempYear;
 
                                       startDate = DateTime(tempYear, 1, 1);
-                                      endDate = DateTime(tempYear, 12, 31);
+                                      endDate = DateTime(tempYear + 1, 1, 1); // next year start
 
                                       setState(() {}); // 🔥 refresh main UI
                                       Navigator.pop(context);
@@ -976,7 +998,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                                       DateTime end = weeks[tempWeekIndex]["end"]!;
 
                                       startDate = start;
-                                      endDate = end;
+                                      endDate = end.add(const Duration(days: 1));
 
                                       setState(() {});
                                       Navigator.pop(context);
@@ -1004,8 +1026,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       );
 
                       if (picked != null) {
-                        startDate = picked;
-                        endDate = picked;
+                        final start = DateTime(picked.year, picked.month, picked.day);
+                        startDate = start;
+                        endDate = start.add(const Duration(days: 1));
                       }
                     }
 
@@ -1018,8 +1041,17 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       );
 
                       if (pickedRange != null) {
-                        startDate = pickedRange.start;
-                        endDate = pickedRange.end;
+                        startDate = DateTime(
+                          pickedRange.start.year,
+                          pickedRange.start.month,
+                          pickedRange.start.day,
+                        );
+
+                        endDate = DateTime(
+                          pickedRange.end.year,
+                          pickedRange.end.month,
+                          pickedRange.end.day,
+                        ).add(const Duration(days: 1)); // fix
                       }
                     }
 
