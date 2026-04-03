@@ -26,6 +26,13 @@ Future<Uint8List> generateProfessionalPdf(List expenses, String filterTitle) asy
     total += e.amount;
   }
 
+  double maxExpense = 0;
+  for (var e in expenses) {
+    if (e.amount > maxExpense) maxExpense = e.amount;
+  }
+
+  double avg = expenses.isEmpty ? 0 : total / expenses.length;
+
   pdf.addPage(
     pw.MultiPage(
       theme: pw.ThemeData.withFont(
@@ -73,6 +80,50 @@ Future<Uint8List> generateProfessionalPdf(List expenses, String filterTitle) asy
                 ),
               ],
             ),
+          ),
+
+          pw.SizedBox(height: 10),
+
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+
+              pw.Container(
+                padding: const pw.EdgeInsets.all(8),
+                decoration: pw.BoxDecoration(
+                  color: PdfColors.blue100,
+                  borderRadius: pw.BorderRadius.circular(6),
+                ),
+                child: pw.Text("Total\n${formatter.format(total)}"),
+              ),
+
+              pw.Container(
+                padding: const pw.EdgeInsets.all(8),
+                decoration: pw.BoxDecoration(
+                  color: PdfColors.green100,
+                  borderRadius: pw.BorderRadius.circular(6),
+                ),
+                child: pw.Text("Max\n${formatter.format(maxExpense)}"),
+              ),
+
+              pw.Container(
+                padding: const pw.EdgeInsets.all(8),
+                decoration: pw.BoxDecoration(
+                  color: PdfColors.orange100,
+                  borderRadius: pw.BorderRadius.circular(6),
+                ),
+                child: pw.Text("Avg\n${formatter.format(avg)}"),
+              ),
+
+              pw.Container(
+                padding: const pw.EdgeInsets.all(8),
+                decoration: pw.BoxDecoration(
+                  color: PdfColors.purple100,
+                  borderRadius: pw.BorderRadius.circular(6),
+                ),
+                child: pw.Text("Entries\n${expenses.length}"),
+              ),
+            ],
           ),
 
           pw.SizedBox(height: 20),
