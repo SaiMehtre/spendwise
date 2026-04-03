@@ -106,7 +106,7 @@ Future<Uint8List> generateProfessionalPdf(List expenses, String filterTitle) asy
                 child: pw.Text("Max\n${formatter.format(maxExpense)}"),
               ),
 
-              pw.Container(
+              pw.Container(  
                 padding: const pw.EdgeInsets.all(8),
                 decoration: pw.BoxDecoration(
                   color: PdfColors.orange100,
