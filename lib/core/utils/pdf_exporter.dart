@@ -3,18 +3,6 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:intl/intl.dart';
 import 'dart:typed_data';
 import 'package:flutter/services.dart' show rootBundle;
-import 'dart:html' as html;
-
-Future<void> saveAndOpenPdf(Uint8List bytes) async {
-  final blob = html.Blob([bytes]);
-  final url = html.Url.createObjectUrlFromBlob(blob);
-
-  final anchor = html.AnchorElement(href: url)
-    ..setAttribute("download", "expense_report.pdf")
-    ..click();
-
-  html.Url.revokeObjectUrl(url);
-}
 
 Future<Uint8List> generateProfessionalPdf(List expenses, String filterTitle) async {
   final pdf = pw.Document();
@@ -27,6 +15,7 @@ Future<Uint8List> generateProfessionalPdf(List expenses, String filterTitle) asy
   final ttfBold = pw.Font.ttf(fontBold);
 
   final formatter = NumberFormat.currency(locale: 'en_IN', symbol: '₹');
+  
 
   /// 🔥 OPTIONAL LOGO (COMMENTED)
   // final logo = await rootBundle.load('assets/images/logo.png');

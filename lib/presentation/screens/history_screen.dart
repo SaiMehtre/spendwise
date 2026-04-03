@@ -9,6 +9,10 @@ import 'package:intl/intl.dart';
 import '../widgets/search_filter_bar.dart';
 import '../../core/utils/category_utils.dart';
 import '../../core/utils/pdf_exporter.dart';
+import 'package:flutter/foundation.dart'; 
+import 'package:printing/printing.dart'; 
+import '../../core/utils/web_helper.dart'
+    if (dart.library.html) '../../core/utils/web_helper_web.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -66,7 +70,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     }
 
     return filters.isEmpty ? "All Expenses" : filters.join(" | ");
-}
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -349,10 +353,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         onPressed: () async {
                           final pdfBytes = await generateProfessionalPdf(
                             filteredExpenses,
-                            getFilterLabel(), // 👈 FIXED
+                            getFilterLabel(),
                           );
 
-                          await saveAndOpenPdf(pdfBytes);
+                          if (kIsWeb) {
+                            saveAndOpenPdf(pdfBytes); // 🌐 Web download
+                          } else {
+                            await Printing.layoutPdf(
+                              onLayout: (format) async => pdfBytes,
+                            ); // 📱 Android/iOS preview & print
+                          }
                         },
                         icon: const Icon(Icons.download),
                         label: const Text("Download PDF"),
