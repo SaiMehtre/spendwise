@@ -109,27 +109,53 @@ Future<Uint8List> generateProfessionalPdf(List expenses, String filterTitle) asy
               ),
 
               /// DATA ROWS
-              ...expenses.map((e) {
-                return pw.TableRow(
-                  children: [
-                    pw.Padding(
-                      padding: const pw.EdgeInsets.all(8),
-                      child: pw.Text(DateFormat('dd MMM yyyy').format(e.date)),
-                    ),
-                    pw.Padding(
-                      padding: const pw.EdgeInsets.all(8),
-                      child: pw.Text(e.category),
-                    ),
-                    pw.Padding(
-                      padding: const pw.EdgeInsets.all(8),
-                      child: pw.Align(
-                        alignment: pw.Alignment.centerRight,
-                        child: pw.Text(formatter.format(e.amount)),
+              ...(expenses.isEmpty
+              ? [
+                  pw.TableRow(
+                    children: [
+                      pw.Container(
+                        padding: const pw.EdgeInsets.all(12),
+                        alignment: pw.Alignment.center,
+                        // Make it span visually by setting width to all columns combined
+                        child: pw.Center(
+                          child: pw.Text(
+                            "No expenses found for selected filters",
+                            style: pw.TextStyle(
+                              fontStyle: pw.FontStyle.italic,
+                              color: PdfColors.grey700,
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
-                );
-              }).toList(),
+                      pw.Container(), // Empty cells to balance table columns
+                      pw.Container(),
+                    ],
+                  ),
+                ]
+              : expenses.map((e) {
+                  return pw.TableRow(
+                    children: [
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(8),
+                        child: pw.Text(
+                          DateFormat('dd MMM yyyy').format(e.date),
+                        ),
+                      ),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(8),
+                        child: pw.Text(e.category),
+                      ),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(8),
+                        child: pw.Align(
+                          alignment: pw.Alignment.centerRight,
+                          child: pw.Text(formatter.format(e.amount)),
+                        ),
+                      ),
+                    ],
+                  );
+                }).toList()
+              ),
             ],
           ),
 
