@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-
 class CategoryUtils {
   static Color getColor(String category) {
     switch (category) {

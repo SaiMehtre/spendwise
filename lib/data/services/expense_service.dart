@@ -8,11 +8,11 @@ class ExpenseService {
   }
 
   void deleteExpense(dynamic key) {
-    box.delete(key); // ✅ CORRECT
+    box.delete(key); 
   }
 
   void updateExpense(dynamic key, Map<String, dynamic> data) {
-    box.put(key, data); // ✅ correct
+    box.put(key, data);
   }
 
   void addExpenseWithKey(dynamic key, Map<String, dynamic> data) {

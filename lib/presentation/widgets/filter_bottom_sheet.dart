@@ -64,7 +64,7 @@ class FilterBottomSheet extends StatelessWidget {
                 .toList(),
             onChanged: (value) {
               onCategoryChanged(value!);
-              Navigator.pop(context); // 🔥 CLOSE sheet
+              Navigator.pop(context); //  CLOSE sheet
             },
           ),
 
@@ -137,7 +137,7 @@ class FilterBottomSheet extends StatelessWidget {
           ),
           const SizedBox(height: 10),
 
-          // 🔥 SINGLE DATE BUTTON
+          //  SINGLE DATE BUTTON
           ElevatedButton(
             onPressed: () async {
               final picked = await showDatePicker(
@@ -151,7 +151,7 @@ class FilterBottomSheet extends StatelessWidget {
                 onStartDateChanged?.call(picked);
                 onEndDateChanged?.call(picked);
 
-                Navigator.pop(context); // 🔥 close
+                Navigator.pop(context); // close
               }
             },
             child: const Text("Select Single Date"),
@@ -159,7 +159,7 @@ class FilterBottomSheet extends StatelessWidget {
 
           const SizedBox(height: 10),
 
-          // 🔥 RANGE BUTTON
+          //  RANGE BUTTON
           ElevatedButton(
             onPressed: () async {
               final pickedRange = await showDateRangePicker(
@@ -172,7 +172,7 @@ class FilterBottomSheet extends StatelessWidget {
                 onStartDateChanged?.call(pickedRange.start);
                 onEndDateChanged?.call(pickedRange.end);
 
-                Navigator.pop(context); // 🔥 close
+                Navigator.pop(context); // close
               }
             },
             child: const Text("Select Date Range"),

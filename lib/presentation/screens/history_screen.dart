@@ -165,7 +165,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           );
                         },
                         child: Chip(
-                          key: ValueKey(selectedCategory), // 🔥 IMPORTANT
+                          key: ValueKey(selectedCategory), //  IMPORTANT
                           avatar: Icon(icon, color: Colors.white, size: 18),
                           label: Text(
                             selectedCategory,
@@ -183,7 +183,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         ),
                       ),
 
-                    /// 🟣 MONTH CHIP
+                    /// MONTH CHIP
                     if (selectedMonth != null)
                       AnimatedSwitcher(
                         duration: const Duration(milliseconds: 400),
@@ -197,7 +197,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           );
                         },
                         child: Chip(
-                          key: ValueKey(selectedMonth), // 🔥 IMPORTANT
+                          key: ValueKey(selectedMonth), //  IMPORTANT
                           avatar: const Icon(Icons.calendar_month, color: Colors.white, size: 18),
                           label: Text(
                             DateFormat.MMM().format(selectedMonth!),
@@ -214,7 +214,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         ),
                       ),
 
-                    /// 🟢 DATE RANGE CHIP
+                    /// DATE RANGE CHIP
                     if (startDate != null)
                       AnimatedSwitcher(
                         duration: const Duration(milliseconds: 400),
@@ -228,7 +228,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           );
                         },
                         child: Chip(
-                          key: ValueKey(startDate.toString() + endDate.toString()), // 🔥 IMPORTANT
+                          key: ValueKey(startDate.toString() + endDate.toString()), //  IMPORTANT
                           avatar: const Icon(Icons.date_range, color: Colors.white, size: 18),
                           label: Text(
                             (endDate == null || startDate == endDate)

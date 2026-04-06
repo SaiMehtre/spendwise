@@ -12,9 +12,9 @@ BoxDecoration premiumBoxDecoration() {
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
     ),
-    borderRadius: BorderRadius.circular(16), // ✅ more premium
+    borderRadius: BorderRadius.circular(16), // more premium
     border: Border.all(
-      color: Colors.white.withOpacity(0.3), // ✅ stronger border
+      color: Colors.white.withOpacity(0.3), // stronger border
       width: 1.2,
     ),
     boxShadow: [
@@ -124,7 +124,7 @@ class FilterSideBar extends StatelessWidget {
                       child: DropdownButton<String>(
                         value: selectedCategory,
                         dropdownColor: const Color(0xFF1E1E1E),
-                        borderRadius: BorderRadius.circular(16), // ✅ popup radius
+                        borderRadius: BorderRadius.circular(16), // popup radius
                         icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white70),
                         isExpanded: true,
                         items: ['All', 'Food', 'Travel', 'Shopping', 'Bills', "Health", "Grocery", "Entertainment", 'Other']
@@ -135,7 +135,7 @@ class FilterSideBar extends StatelessWidget {
                                       Icon(
                                         cat == "All"
                                             ? Icons.all_inclusive
-                                            : CategoryUtils.getIcon(cat), // ✅ utils icon
+                                            : CategoryUtils.getIcon(cat), // utils icon
                                         color: cat == "All"
                                             ? Colors.white70
                                             : CategoryUtils.getColor(cat),

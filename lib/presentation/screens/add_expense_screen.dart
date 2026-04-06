@@ -19,7 +19,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   String? selectedCategory;
   final List<String> categories = ["Food", "Travel", "Shopping", "Bills", "Health", "Grocery", "Entertainment", "Others"];
 
-  // ✅ Form key for validation
+  // Form key for validation
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -52,7 +52,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       service.updateExpense(widget.keyValue!, data);
     }
 
-    // 🔥 JUST RETURN RESULT
+    //  JUST RETURN RESULT
     Navigator.pop(context, {
       "success": true,
       "isUpdate": widget.keyValue != null,
@@ -91,7 +91,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         ),
         padding: EdgeInsets.fromLTRB(
           20,
-          kToolbarHeight + MediaQuery.of(context).padding.top + 10, // 🔥 dynamic top
+          kToolbarHeight + MediaQuery.of(context).padding.top + 10, //  dynamic top
           20,
           20,
         ),

@@ -17,7 +17,7 @@ Future<Uint8List> generateProfessionalPdf(List expenses, String filterTitle) asy
   final formatter = NumberFormat.currency(locale: 'en_IN', symbol: '₹');
   
 
-  /// 🔥 OPTIONAL LOGO (COMMENTED)
+  /// LOGO
   // final logo = await rootBundle.load('assets/images/logo.png');
   // final logoBytes = logo.buffer.asUint8List();
 
@@ -49,7 +49,7 @@ Future<Uint8List> generateProfessionalPdf(List expenses, String filterTitle) asy
     if (e.amount > maxExpense) maxExpense = e.amount;
   }
 
-  double avg = expenses.isEmpty ? 0 : total / expenses.length;
+  // double avg = expenses.isEmpty ? 0 : total / expenses.length;
 
   pdf.addPage(
     pw.MultiPage(
@@ -61,7 +61,7 @@ Future<Uint8List> generateProfessionalPdf(List expenses, String filterTitle) asy
       build: (context) {
         return [
 
-          /// 🔥 HEADER
+          ///  HEADER
           pw.Container(
             padding: const pw.EdgeInsets.only(bottom: 10),
             decoration: const pw.BoxDecoration(
@@ -148,7 +148,7 @@ Future<Uint8List> generateProfessionalPdf(List expenses, String filterTitle) asy
 
           pw.SizedBox(height: 20),
 
-          /// 🔥 TABLE
+          ///  TABLE
           pw.Table(
             border: pw.TableBorder.all(color: PdfColors.grey300),
             columnWidths: {
@@ -232,7 +232,7 @@ Future<Uint8List> generateProfessionalPdf(List expenses, String filterTitle) asy
 
           pw.SizedBox(height: 20),
 
-          /// 🔥 TOTAL BOX
+          ///  TOTAL BOX
           pw.Container(
             alignment: pw.Alignment.centerRight,
             padding: const pw.EdgeInsets.all(10),

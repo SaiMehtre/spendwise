@@ -217,7 +217,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
 
-          // 🔥 Amount (EXACT CENTER)
+          //  Amount (EXACT CENTER)
           Align(
             alignment: Alignment.center,
             child: TweenAnimationBuilder<double>(
@@ -335,7 +335,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: ClipRRect(
           // Rounded edges optional
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12), // 🔥 blur
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12), //  blur
             child: AppBar(
               backgroundColor: Colors.white.withOpacity(0.1), // semi-transparent glass
               elevation: 0,
@@ -461,7 +461,7 @@ class HomeContent extends StatefulWidget  {
 
               const SizedBox(height: 6),
 
-               // 🔥 IMPORTANT PART
+               //  IMPORTANT PART
               Expanded(
                 child: ValueListenableBuilder(
                   valueListenable: widget.service.box.listenable(),
@@ -493,7 +493,7 @@ class HomeContent extends StatefulWidget  {
                       padding: const EdgeInsets.only(bottom: 80),
                       itemBuilder: (context, index) {
 
-                        // 🔥 LAST ITEM = BUTTON
+                        //  LAST ITEM = BUTTON
                         if (index == recentExpenses.length) {
                           return AnimatedOpacity(
                             duration: const Duration(milliseconds: 500),
@@ -548,7 +548,7 @@ class HomeContent extends StatefulWidget  {
                         final item = recentExpenses[index];
 
                         return Dismissible(
-                          key: ValueKey(item.id), // ✅ IMPORTANT
+                          key: ValueKey(item.id), // IMPORTANT
 
                           direction: DismissDirection.horizontal,
                           dismissThresholds: const {
@@ -606,24 +606,24 @@ class HomeContent extends StatefulWidget  {
                           },
 
                           onDismissed: (direction) {
-                            // 1️⃣ Backup the deleted item and its key
+                            // Backup the deleted item and its key
                             final deletedItem = item.toMap();
                             final deletedKey = item.id;
 
-                            // 2️⃣ Delete the expense
+                            // Delete the expense
                             widget.service.deleteExpense(deletedKey);
 
-                            // 3️⃣ Post-frame callback to show SnackBar safely
+                            // Post-frame callback to show SnackBar safely
                             WidgetsBinding.instance.addPostFrameCallback((_) {
                               final messenger = ScaffoldMessenger.of(context);
 
                               // Clear any existing SnackBars
                               messenger.clearSnackBars();
 
-                              // 4️⃣ Declare controller before use
+                              // Declare controller before use
                               late ScaffoldFeatureController<SnackBar, SnackBarClosedReason> controller;
 
-                              // 5️⃣ Show SnackBar with UNDO
+                              // Show SnackBar with UNDO
                               controller = messenger.showSnackBar(
                                 SnackBar(
                                   duration: const Duration(seconds: 3),
@@ -644,12 +644,12 @@ class HomeContent extends StatefulWidget  {
                                     label: "UNDO",
                                     textColor: Colors.white,
                                     onPressed: () {
-                                      // 6️⃣ Restore the expense safely
+                                      // Restore the expense safely
                                       final newItem = Map<String, dynamic>.from(deletedItem);
                                       newItem.remove('key');
                                       widget.service.addExpenseWithKey(deletedKey, newItem);
 
-                                      // 7️⃣ Close this SnackBar safely
+                                      // Close this SnackBar safely
                                       try {
                                         controller.close();
                                       } catch (_) {
@@ -687,7 +687,7 @@ class HomeContent extends StatefulWidget  {
                                 ),
                               );
 
-                              // 8️⃣ Auto-dismiss delete SnackBar after 3 sec
+                              // Auto-dismiss delete SnackBar after 3 sec
                               Future.delayed(const Duration(seconds: 3), () {
                                 try {
                                   controller.close();

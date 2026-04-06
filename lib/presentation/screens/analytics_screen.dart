@@ -227,7 +227,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       },
                       child: buildPieChart(
                         categoryMap,
-                        key: ValueKey(startDate.toString() + endDate.toString()), // 🔥 IMPORTANT
+                        key: ValueKey(startDate.toString() + endDate.toString()), //  IMPORTANT
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -455,7 +455,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     final sorted = data.entries.toList()
   ..sort((a, b) => b.value.compareTo(a.value));
 
-    // 👇 EMPTY DATA CASE
+    // EMPTY DATA CASE
     if (total == 0) {
       return [
         PieChartSectionData(

@@ -45,7 +45,7 @@ Widget build(BuildContext context) {
           child: Stack(
             children: [
 
-              // ✅ LEFT STRIP (auto full height)
+              // LEFT STRIP (auto full height)
               Positioned(
                 left: 0,
                 top: 0,
@@ -62,7 +62,7 @@ Widget build(BuildContext context) {
                 ),
               ),
 
-              // ✅ ORIGINAL CONTENT (unchanged, just padded)
+              // ORIGINAL CONTENT (unchanged, just padded)
               Padding(
                 padding: const EdgeInsets.only(left: 8),
                 child: Row(
