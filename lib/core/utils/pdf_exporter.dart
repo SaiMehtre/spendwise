@@ -26,6 +26,24 @@ Future<Uint8List> generateProfessionalPdf(List expenses, String filterTitle) asy
     total += e.amount;
   }
 
+    /// Top Category Logic
+  Map<String, double> categoryTotals = {};
+
+  for (var e in expenses) {
+    categoryTotals[e.category] =
+        (categoryTotals[e.category] ?? 0) + e.amount;
+  }
+
+  String topCategory = "";
+  double topValue = 0;
+
+  categoryTotals.forEach((key, value) {
+    if (value > topValue) {
+      topValue = value;
+      topCategory = key;
+    }
+  });
+
   double maxExpense = 0;
   for (var e in expenses) {
     if (e.amount > maxExpense) maxExpense = e.amount;
@@ -112,7 +130,9 @@ Future<Uint8List> generateProfessionalPdf(List expenses, String filterTitle) asy
                   color: PdfColors.orange100,
                   borderRadius: pw.BorderRadius.circular(6),
                 ),
-                child: pw.Text("Avg\n${formatter.format(avg)}"),
+                child: pw.Text(
+                  "Top\n${topCategory.isEmpty ? "-" : topCategory}",
+                ),
               ),
 
               pw.Container(

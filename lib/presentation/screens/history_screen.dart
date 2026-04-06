@@ -320,23 +320,55 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
                     SizedBox(
                       width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () async {
-                          final pdfBytes = await generateProfessionalPdf(
-                            filteredExpenses,
-                            getFilterLabel(),
-                          );
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          gradient: const LinearGradient(
+                            colors: [
+                              Color(0xFF4CAF50),
+                              Color(0xFF2E7D32),
+                            ],
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: ElevatedButton.icon(
+                          onPressed: () async {
+                            final pdfBytes = await generateProfessionalPdf(
+                              filteredExpenses,
+                              getFilterLabel(),
+                            );
 
-                          if (kIsWeb) {
-                            saveAndOpenPdf(pdfBytes); // 🌐 Web download
-                          } else {
-                            await Printing.layoutPdf(
-                              onLayout: (format) async => pdfBytes,
-                            ); // 📱 Android/iOS preview & print
-                          }
-                        },
-                        icon: const Icon(Icons.download),
-                        label: const Text("Download PDF"),
+                            if (kIsWeb) {
+                              saveAndOpenPdf(pdfBytes);
+                            } else {
+                              await Printing.layoutPdf(
+                                onLayout: (format) async => pdfBytes,
+                              );
+                            }
+                          },
+                          icon: const Icon(Icons.picture_as_pdf, size: 20),
+                          label: const Text(
+                            "Download Report",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
                       ),
                     ),
 
